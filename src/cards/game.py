@@ -1,3 +1,4 @@
+import os
 from .models import PlayerMonState
 
 player = PlayerMonState('Insipid Atom', 50, 20)
@@ -21,7 +22,7 @@ def main():
                 break
             case ["exit"]:
                 print("Okay.")
-                exit()
+                os._exit(1)
             case _:
                 print("??? What???")
         
