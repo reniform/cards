@@ -13,6 +13,9 @@ dependencies = [
 [tool.poetry]
 packages = [{include = "cards", from = "src"}]
 
+[tool.poetry.scripts]
+game = "cards.game:main"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
