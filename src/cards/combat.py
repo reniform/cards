@@ -1,5 +1,3 @@
-from .enums import ManaType
-
 class Attack:
     def __init__(self, name, damage, cost):
         # cost will be a dict of {ManaType: amount}
@@ -13,5 +11,5 @@ class Attack:
             return
         
         attacker.spend_mana(self.cost)
-        target.take_damage(self.damage)
+        target.active_monster.take_damage(self.damage)
         print(f"{self.name} dealt {self.damage} damage!")
