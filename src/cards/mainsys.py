@@ -1,7 +1,5 @@
 from enum import Enum
 
-playMode = True
-
 class ManaType(Enum):
     GRASS       = 'grass'
     FIRE        = 'fire'
@@ -29,8 +27,15 @@ class Attack:
         self.damage = damage
         self.cost = cost
     
-    def executeAttack(self, attacker, target):
-        pass
+    def execute(self, attacker, target):
+        if not attacker.has_mana(self.cost):
+            print(f"Not enough mana for {self.name}!")
+            return
+        
+        attacker.spend_mana(self.cost)
+        target.take_damage(self.damage)
+        print(f"{self.name} dealt {self.damage} damage!")
+        
 
 class PlayerMonState(GlobalMonCard):
     """The current player state, derived from the mon card.
@@ -39,23 +44,34 @@ class PlayerMonState(GlobalMonCard):
     """
     def __init__(self, name, health, strength):
         super().__init__(name, health, strength)
-        self.mana_pool = { 
-            # Initialize pool with default values
-            ManaType.GRASS: 0, ManaType.FIRE: 0,
-            ManaType.WATER: 0, ManaType.LIGHTNING: 0,
-            ManaType.FIGHTING: 0, ManaType.PSYCHIC: 0,
-            ManaType.DARKNESS: 0, ManaType.METAL: 0,
-            ManaType.DRAGON: 0, ManaType.FAIRY: 0,
-            ManaType.COLORLESS: 0
-        }
+        self.mana_pool = {mana_type: 0 for mana_type in ManaType}
+        self.attacks = [
+            Attack("Flamethrower", 50, {ManaType.FIRE: 2, ManaType.COLORLESS: 1}),
+            Attack("Fire Blast", 100, {ManaType.FIRE: 4})
+        ]
 
     def has_mana(self, cost):
         """Checks whether there is sufficent mana in the mana pool for performing
         an action that costs mana. 'cost' is a dict like {ManaType.FIRE: 2, ...}
         """
+
+        # Make a copy to not mutate original: what remains will be 
+        remaining_pool = self.mana_pool.copy()
+
+        # First, pay specific mana costs. Colorless costs are handled later
         for mana_type, amount in cost.items():
+            if mana_type == ManaType.COLORLESS:
+                continue
             if self.mana_pool.get(mana_type, 0) < amount:
                 return False
+            remaining_pool[mana_type] -= amount
+
+        # Handle colorless costs
+        if ManaType.COLORLESS in cost:
+            total_remaining = sum(remaining_pool.values())
+            if total_remaining < cost[ManaType.COLORLESS]:
+                return False
+        
         return True
 
     def add_mana(self, mana_type_str, qty):
@@ -71,29 +87,29 @@ class PlayerMonState(GlobalMonCard):
     def spend_mana(self, cost):
         """Spends mana during the exertion of a move that costs a specific quantity of mana.
         """
+        # Pay non-colorless costs first
         for mana_type, amount in cost.items():
+            if mana_type == ManaType.COLORLESS:
+                continue
             self.mana_pool[mana_type] -= amount
-
-    def attack(self, target, mana_cost = 1):
-        """Performs an 'attack' move that depletes the health of an opponent.
-        First, a mana check is performed, testing whether the player has sufficient mana in the mana pool.
-        Second, arithmetic is performed: the target sustains damage, and the mana is removed from the mana pool.
-        The effects are then displayed.
-        """
-        # Perform mana check
-        if not self.has_mana(mana_cost):
-            print("Not enough mana!")
-            return
         
-        # Perform arithmetic
-        target.health = target.health - self.strength
-        self.spend_mana(mana_cost)
+        # Pay colorless costs
+        if ManaType.COLORLESS in cost:
+            colorless_needed = cost[ManaType.COLORLESS]
+            for mana_type in ManaType:
+                if colorless_needed <= 0:
+                    break
+                available = self.mana_pool[mana_type]
+                to_spend = min(available, colorless_needed)
+                self.mana_pool[mana_type] -= to_spend
+                colorless_needed -= to_spend
 
-        # Display effects
-        print(self.title, "attacks", target.title, 
-              "and inflicts", self.strength, "HP damage")
+    def use_attack(self, attack_index, target):
+        """Performs attack from the given index"""
+        attack = self.attacks[attack_index]
+        attack.execute(self, target)
         
-    def printManaPool(self):
+    def print_mana_pool(self):
         """This strange, temporary function serves merely to test
         mana quantities."""
         for type in self.mana_pool:
@@ -101,21 +117,28 @@ class PlayerMonState(GlobalMonCard):
                 print(str(ManaType(type).value[:1].upper()) + 
                       str(self.mana_pool[ManaType(type)]), end=" ")
         print("")
+    
+    def take_damage(self, damage):
+        self.health -= damage
 
 player = PlayerMonState('Insipid Atom', 50, 20)
 opponent = PlayerMonState('Petulant Beast', 60, 5)
 
 while True:
     print(f'{player.title} \t\t HP {player.health}')
-    player.printManaPool()
+    player.print_mana_pool()
     print(f'{opponent.title} \t\t HP {opponent.health}')
     command = input("What will you do? :D ")
     # RUN INPUT TURN
     match command.split():
         case ['attack']:
-            player.attack(opponent, {ManaType.FIRE: 2, ManaType.COLORLESS: 1})
+            player.use_attack(0, opponent)
         case ['mana', manaType]:
-            player.add_mana(manaType, 1)
+            player.add_mana(manaType, 0)
+        case ['mana', manaType, qty]:
+            player.add_mana(manaType, int(qty))
+        case ['debug']:
+            break
         case ["exit"]:
             print("Okay.")
             exit()
