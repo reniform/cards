@@ -29,6 +29,6 @@ class TerminalView:
         if not player.hand:
             return "Your hand is empty."
         hand_strings = []
-        for hand_index, card in enumerate(player.hand, start=1):
-            hand_strings.append(f"[{hand_index}]: {card.title} {card.id}\t{card.type.value.upper()}")
+        for card_id, card in player.hand.items():
+            hand_strings.append(f"{card.title} {card_id}\t{card.type.value.upper()}")
         return "\n".join(hand_strings)

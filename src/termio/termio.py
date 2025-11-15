@@ -14,10 +14,15 @@ class CommandHandler:
     def handle_bench(player, opponent, *args):
         hand_string = TerminalView.get_hand_list_string(player)
         print(hand_string)
-        index = input("Select monster from hand with numeric input. ")
-        if not player.add_to_bench(int(index)):
-            print("Invalid index.")
-        print(player.bench[0].title)
+        index = input("Select card to bench by displayed ID. ")
+        try:
+            player.add_to_bench(int(index))
+        except KeyError:
+            print(f"Invalid index: {index}")
+            return
+        except ValueError:
+            print(f"Invalid index: {index}")
+            return
         
     @staticmethod
     def handle_mana(player, opponent, *args):

@@ -27,7 +27,7 @@ player.add_to_hand(dbCard3)
 player.set_active_monster(0)
 
 opponent.add_to_hand(dbCard2)
-opponent.set_active_monster(0)
+opponent.set_active_monster(1)
 
 def main():
     """

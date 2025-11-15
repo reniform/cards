@@ -63,11 +63,9 @@ class PlayerUnit():
     
     def remove_from_hand(self, card_id):
         """
-        Removes and returns a card from the hand.
+        Removes and returns a card from the hand by its ID.
         """
-        if 0 <= card_id < len(self.bench):
-            self.hand.pop(card_id)
-        return None
+        return self.hand.pop(card_id, None)
 
 
     #! DISCARD METHODS
@@ -85,6 +83,9 @@ class PlayerUnit():
 
     #! BENCH METHODS
     def add_to_bench(self, card_id):
+        """
+        Adds a card to the bench **from the hand**.
+        """
         # Check against limit on amount of bench cards
         if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
             print("Too many cards in bench!")
@@ -92,7 +93,7 @@ class PlayerUnit():
         
         # Perform the bench operation:
         card_to_bench = self.hand[card_id]
-        self.bench.append(card_to_bench)
+        self.bench[card_id] = card_to_bench
         self.remove_from_hand(card_id)
         return True
 
@@ -104,11 +105,9 @@ class PlayerUnit():
 
     def remove_from_bench(self, card_id):
         """
-        Removes and returns a card from the hand.
+        Removes and returns a card from the bench by its ID.
         """
-        if 0 <= card_id < len(self.bench):
-            self.bench.pop(card_id)
-        return None
+        return self.bench.pop(card_id, None)
 
     #! ACTIVE MONSTER METHODS
     def set_active_monster(self, card_id):
