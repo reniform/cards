@@ -1,5 +1,6 @@
 import os
-from .models import MonsterTemplate, PlayerUnit
+from models.monster import MonsterTemplate
+from models.player  import PlayerUnit
 from .enums  import ManaType
 from .combat import Attack
 
@@ -12,7 +13,7 @@ attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1})
 
 # Template cards
 dbCard1 = MonsterTemplate('Insipid Atom',   50, 20, [attack_flamethrower, attack_scratch])
-dbCard2 = MonsterTemplate('Petulant Beast', 1200, 10, [attack_scratch])
+dbCard2 = MonsterTemplate('Petulant Beast', 50, 10, [attack_scratch])
 
 # Temporary setting activity
 player.add_to_field(dbCard1)
@@ -33,7 +34,7 @@ def main():
         # RUN INPUT TURN
         match command.split():
             case ['attack']:
-                player.active_monster.use_attack(0, player, opponent)
+                player.active_monster.use_attack(1, player, opponent)
             case ['mana', manaType]:
                 player.add_mana(manaType, 1)
             case ['mana', manaType, qty]:
@@ -49,4 +50,4 @@ def main():
         # PERFORM CHECKS
         if opponent.active_monster.health <= 0:
             print("You win!")
-            exit()
+            os._exit(1)

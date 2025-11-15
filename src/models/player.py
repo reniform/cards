@@ -1,56 +1,9 @@
-from .enums import ManaType, CardType
+from cards.enums import ManaType, CardType
+from .monster import MonsterCard
+# Waiting upon utility and mana definitions.
+#from .utility import UtilityCard
+#from .mana import ManaCard
 
-# MonsterTemplate   Base data -> insubstantiated MT object
-#   ↓                   
-# MonsterCard       Live card in playerspace (in deck, discard, party)
-
-class MonsterTemplate:
-    """
-    **MonsterTemplate** holds base data.
-    """
-    type = CardType.MONSTER
-    id   = 1
-    def __init__(self, title, health, strength, attacks):
-        self.title = title
-        self.health = health
-        self.strength = strength
-        self.attacks = attacks
-
-class MonsterCard(MonsterTemplate):
-    """
-    **MonsterCard** represents monster cards active in the player's deck.
-    They are instantiated from the global data within a `MonsterTemplate`.
-    """
-    #def __init__(self, title, health, strength, attacks):
-        #pass
-        #super().__init__(title, health, strength, attacks)
-
-    def __init__(self, card):
-        self.card = card
-        self.title = card.title
-        self.health = card.health
-        self.strength = card.strength
-        self.attacks = card.attacks
-
-    def use_attack(self, attack_index, player, target):
-        """Performs attack from the given index"""
-        attack = self.attacks[attack_index]
-        attack.execute(player, target)
-    
-    def take_damage(self, damage):
-        self.health -= damage
-
-class UtilityTemplate:
-    type = CardType.UTILITY
-
-class UtilityCard(UtilityTemplate):
-    pass
-
-class ManaTemplate:
-    type = CardType.MANA
-
-class ManaCard(ManaTemplate):
-    pass
 
 class PlayerUnit():
     """
@@ -72,6 +25,7 @@ class PlayerUnit():
     ### Debug:
     * `print_mana_pool()` Print mana pool in the terminal debug output.
     """
+    type = CardType.MONSTER
     CONST_MAX_CARDS = 60
 
     def __init__(self):
