@@ -22,3 +22,9 @@ class TerminalView:
         pool_parts = [f"{TCol.OKBLUE}{k.value[:1].upper()}{k.value[1:2].lower()}{v}{TCol.ENDC}" 
                       for k, v in player.mana_pool.items() if v > 0]
         return " ".join(pool_parts) if pool_parts else "No mana"
+    
+    @staticmethod
+    def get_hand_list_string(player: PlayerUnit) -> str:
+        """Returns the player's current hand as a formatted string."""
+        for hand_index, card in enumerate(player.hand, start=1):
+            print(f"[{hand_index}]: {card.title}")

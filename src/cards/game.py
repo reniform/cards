@@ -2,6 +2,7 @@ import os
 from models.monster import MonsterTemplate
 from models.player  import PlayerUnit
 from termio.view    import TerminalView
+from termio.termio  import CommandHandler
 from termio.color   import TCol
 from .enums  import ManaType
 from .combat import Attack
@@ -22,7 +23,7 @@ dbCard4 = MonsterTemplate('Querulous Photon', 120, 20, [attack_flamethrower])
 
 # Temporary setting activity
 player.add_to_hand(dbCard1)
-player.add_to_field(dbCard3)
+player.add_to_hand(dbCard3)
 player.set_active_monster(0)
 
 opponent.add_to_hand(dbCard2)
@@ -40,24 +41,23 @@ def main():
         print(TerminalView.get_player_status_string(player))
         print(TerminalView.get_player_status_string(opponent))
         command = input("What will you do? :D ")
-        # RUN INPUT TURN
-        match command.split():
-            case ['attack']:
-                player.active_monster.use_attack(0, player, opponent)
-            case ['mana', manaType]:
-                #TODO: If mana add fails or is invalid, handle the call here.
-                player.add_mana(manaType, 1)
-            case ['mana', manaType, qty]:
-                player.add_mana(manaType, int(qty))
-            case ['debug']:
-                break
-            case ["exit"]:
-                print("Okay.")
-                os._exit(1)
-            case _:
-                turn_count -= 1
-                print("??? What???")
-        
+
+        parts = command.split()
+        if not parts:
+            turn_count -= 1
+            continue
+
+        command_word = parts[0]
+        args = parts[1:]
+
+        if command_word == 'debug': # Special case to break the loop
+            break
+        elif handler := CommandHandler.COMMANDS.get(command_word):
+            handler(player, opponent, *args)
+        else:
+            turn_count -= 1
+            print("??? What???")
+
         # PERFORM CHECKS
         if opponent.active_monster.health <= 0:
             print("You win!")
