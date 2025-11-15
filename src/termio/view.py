@@ -1,5 +1,5 @@
 from models.player import PlayerUnit
-from cards.enums import ManaType
+from cards.enums import ManaType, CardType
 from .color import TCol
 
 class TerminalView:
@@ -27,4 +27,4 @@ class TerminalView:
     def get_hand_list_string(player: PlayerUnit) -> str:
         """Returns the player's current hand as a formatted string."""
         for hand_index, card in enumerate(player.hand, start=1):
-            print(f"[{hand_index}]: {card.title}")
+            print(f"[{hand_index}]: {card.title}\t{card.type.value.upper()}")
