@@ -6,6 +6,7 @@ from termio.termio  import CommandHandler
 from termio.color   import TCol
 from .enums  import ManaType
 from .combat import Attack
+from ...data.testpy.carddata import *
 
 # Insubstantiating the player states.
 player = PlayerUnit()

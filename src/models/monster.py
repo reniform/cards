@@ -13,12 +13,31 @@ class MonsterTemplate(CardTemplate):
     type = CardType.MONSTER
     id = None
 
-    def __init__(self, title, health, attacks):
+    def __init__(self, **kwargs):
+        # Recieve CardTemplate ID
         super().__init__()
-        self.title = title
-        self.health = health
-        self.max_health = health
-        self.attacks = attacks
+
+        # Perform insubstantiation to necessary fields from kwargs.
+        self.type           = kwargs['type']            # CardType
+        self.title          = kwargs['title']           # str
+        self.stage          = kwargs['stage']           # StageType
+        self.mana_type      = kwargs['manaType']        # ManaType
+        self.evolve_from    = kwargs['evolveFrom']      # str ?
+        self.evolve_to      = kwargs['evolveTo']        # str ?
+        self.health         = kwargs['health']          # int
+        self.weak_type      = kwargs['weakType']        # ManaType
+        self.weak_mult      = kwargs['weakMult']        # int
+        self.resist_type    = kwargs['resistType']      # ManaType
+        self.resist_mult    = kwargs['resistMult']      # int
+        self.retreat_val    = kwargs['retreatVal']      # int
+        self.attacks        = kwargs['attacks']         # dict: Attack
+
+        # Perform insubstantiation to optional fields from kwargs.
+        self.abilities      = kwargs['abilities']       # list: Ability
+        self.level          = kwargs['level']           # int
+        self.dex_data       = kwargs['dexData']         # dict: JSON-esque
+        self.print_data     = kwargs['printData']       # dict: JSON-esque
+
 
 class MonsterCard(MonsterTemplate):
     """
