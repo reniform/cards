@@ -11,15 +11,15 @@ from .combat import Attack
 player = PlayerUnit()
 opponent = PlayerUnit()
 
-attack_flamethrower = Attack("Flamethrower", 50, {ManaType.FIRE: 2})
-attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1})
+attack_flamethrower = Attack("Flamethrower", 50, {ManaType.FIRE: 2}, None)
+attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1}, None)
 
 # Template cards
-dbCard1 = MonsterTemplate('Insipid Atom',   50, 20, [attack_flamethrower])
-dbCard2 = MonsterTemplate('Petulant Beast', 50, 10, [attack_scratch])
+dbCard1 = MonsterTemplate('Insipid Atom', 50, [attack_flamethrower])
+dbCard2 = MonsterTemplate('Petulant Beast', 50, [attack_scratch])
 
-dbCard3 = MonsterTemplate('Crotchety Ion', 150, 10, [attack_scratch])
-dbCard4 = MonsterTemplate('Querulous Photon', 120, 20, [attack_flamethrower])
+dbCard3 = MonsterTemplate('Crotchety Ion', 150, [attack_scratch])
+dbCard4 = MonsterTemplate('Querulous Photon', 120, [attack_flamethrower])
 
 # Temporary setting activity
 player.add_to_hand(dbCard1)
@@ -38,8 +38,8 @@ def main():
         #TODO Buggy turn counter
         turn_count += 1
         print(f'{TCol.HEADER} Turn {turn_count} {TCol.ENDC}')
-        print(TerminalView.get_player_status_string(player))
         print(TerminalView.get_player_status_string(opponent))
+        print(TerminalView.get_player_status_string(player, bold=True))
         command = input("What will you do? :D ")
 
         parts = command.split()

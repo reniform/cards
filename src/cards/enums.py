@@ -1,9 +1,5 @@
 from enum import Enum
 
-"""
-'enums.py' contains enumerations and basic game data.
-"""
-
 class CardType(Enum):
     """
     'CardType' lists the types of cards available to the player.

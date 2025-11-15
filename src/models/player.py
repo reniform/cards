@@ -27,18 +27,25 @@ class PlayerUnit():
     """
     type = CardType.MONSTER
     CONST_MAX_CARDS = 60
+    CONST_MAX_BENCH_CARDS = 5
 
     def __init__(self):
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
         self.field = []
-        self.hand = []
         self.deck = []
+        self.hand = []
         self.discard = []
         self.prize = []
+        self.bench = []
         self.active_monster = None
 
     #! FIELD METHODS
     def add_to_field(self, card):
+        """
+        Adds a card to the general field.
+        :param card: The card to be added.
+        :return: True if the card was successfully added, False otherwise.
+        """
         if len(self.field) >= self.CONST_MAX_CARDS:
             print("Too many cards in deck!")
             return False
@@ -55,8 +62,14 @@ class PlayerUnit():
     def check_in_hand(self):
         pass
     
-    def remove_from_hand(self):
-        pass
+    def remove_from_hand(self, card_index):
+        """
+        Removes and returns a card from the hand.
+        """
+        if 0 <= card_index < len(self.hand):
+            self.hand.pop(card_index)
+        return None
+
 
     #! DISCARD METHODS
     def add_to_discard(self):
@@ -71,11 +84,44 @@ class PlayerUnit():
     def remove_from_discard(self):
         pass
 
-    #! ACTIVE MONSTER METHODS
-    def set_active_monster(self, card_in_hand):
-        if self.hand[card_in_hand].type != CardType.MONSTER:
+    #! BENCH METHODS
+    def add_to_bench(self, input_index):
+        # Check against limit on amount of bench cards
+        if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
+            print("Too many cards in bench!")
             return False
-        self.active_monster = self.hand[card_in_hand]
+        
+        # Adjust for zero-based list index
+        card_index = input_index - 1
+        if not 0 <= card_index < len(self.hand):
+            print("Invalid index.")
+            return False
+        
+        # Perform the bench operation:
+        card_to_bench = self.hand[card_index]
+        self.bench.append(card_to_bench)
+        self.remove_from_hand(card_index)
+        return True
+
+    def retrieve_bench(self):
+        pass
+
+    def check_in_bench(self):
+        pass
+
+    def remove_from_bench(self, bench_index):
+        """
+        Removes and returns a card from the hand.
+        """
+        if 0 <= bench_index < len(self.bench):
+            self.bench.pop(bench_index)
+        return None
+
+    #! ACTIVE MONSTER METHODS
+    def set_active_monster(self, hand_card_index):
+        if self.hand[hand_card_index].type != CardType.MONSTER:
+            return False
+        self.active_monster = self.hand[hand_card_index]
         return True
 
     #! CHECK FOR MANA

@@ -2,20 +2,25 @@ from cards.enums import CardType
 
 class MonsterTemplate:
     """
-    **MonsterTemplate** holds base data.
+    Immutable instance and static data source for monster cards. Holds the following values:
+    ### Basic metadata
+    * `title`: Monster name.
+    * `health`: Hit points for the monster; maximum health is displayed with `max_health`.
+    ### Play data
+    * `attacks`: A list of attack-like actions to be taken by the monster in play. They are of type `Attack`, and may be chained with effects.
     """
     type = CardType.MONSTER
     id   = 1
-    def __init__(self, title, health, strength, attacks):
+
+    def __init__(self, title, health, attacks):
         self.title = title
         self.health = health
-        self.strength = strength
+        self.max_health = health
         self.attacks = attacks
 
 class MonsterCard(MonsterTemplate):
     """
-    **MonsterCard** represents monster cards active in the player's deck.
-    They are instantiated from the global data within a `MonsterTemplate`.
+    Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.
     """
     #def __init__(self, title, health, strength, attacks):
         #pass
@@ -25,7 +30,6 @@ class MonsterCard(MonsterTemplate):
         self.card = card
         self.title = card.title
         self.health = card.health
-        self.strength = card.strength
         self.attacks = card.attacks
 
     def use_attack(self, attack_index, player, target):

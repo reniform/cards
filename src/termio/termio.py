@@ -9,6 +9,16 @@ class CommandHandler:
     def handle_attack(player, opponent, *args):
         # TODO: Allow user to specify which attack to use
         player.active_monster.use_attack(0, player, opponent)
+
+    @staticmethod
+    def handle_bench(player, opponent, *args):
+        hand_string = TerminalView.get_hand_list_string(player)
+        print(hand_string)
+        index = input("Select monster from hand with numeric input. ")
+        if not player.add_to_bench(int(index)):
+            print("Invalid index.")
+        print(player.bench[0].title)
+        
     
     @staticmethod
     def handle_mana(player, opponent, *args):
@@ -35,12 +45,14 @@ class CommandHandler:
     @staticmethod
     def handle_show(player, opponent, *args):
         if args and args[0] == 'hand':
-            TerminalView.get_hand_list_string(player)
+            hand_string = TerminalView.get_hand_list_string(player)
+            print(hand_string)
         else:
             print("Usage: show hand")
 
     COMMANDS = {
         'attack': handle_attack,
+        'bench': handle_bench,
         'mana': handle_mana,
         'exit': handle_exit,
         'show': handle_show,
