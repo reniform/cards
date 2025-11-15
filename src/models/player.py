@@ -29,13 +29,15 @@ class PlayerUnit():
     CONST_MAX_CARDS = 60
     CONST_MAX_BENCH_CARDS = 5
 
-    def __init__(self):
+    def __init__(self, title='Player'):
+        self.title = title
         self.field = {}
         self.deck = {}
         self.hand = {}
         self.discard = {}
-        self.prize = {}
         self.bench = {}
+        self.prize = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None}
+        self.score = len(self.prize)
         self.active_monster = None
 
     #! FIELD METHODS

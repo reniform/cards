@@ -3,12 +3,12 @@ from models.monster import MonsterTemplate
 from models.player  import PlayerUnit
 from termio.view    import TerminalView
 from termio.termio  import CommandHandler
-from termio.color   import TCol
+import colorful as cf
 from .carddata import give_test_card
 
 # Insubstantiating the player states.
 player = PlayerUnit()
-opponent = PlayerUnit()
+opponent = PlayerUnit('Opponent')
 
 #attack_flamethrower = Attack("Flamethrower", 50, {ManaType.FIRE: 2}, None)
 #attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1}, None)
@@ -37,11 +37,15 @@ def main():
     """
     turn_count = 0
     while True:
+        #os.system('cls' if os.name == 'nt' else 'clear')
         #TODO Buggy turn counter
         turn_count += 1
-        print(f'{TCol.HEADER} Turn {turn_count} {TCol.ENDC}')
-        print(TerminalView.get_player_status_string(opponent))
-        print(TerminalView.get_player_status_string(player, bold=True))
+        # Lazy, but functional for now until I get a game context class
+        print(f'== {cf.bold} Turn [{turn_count}] {cf.reset} ======================================================================')
+        print(TerminalView.print_player_data(opponent, opposite=True))
+        print(TerminalView.print_active_monster(opponent))
+        print(TerminalView.print_active_monster(player))
+        print(TerminalView.print_player_data(player))
         command = input("What will you do? :D ")
 
         parts = command.split()
@@ -59,7 +63,7 @@ def main():
         else:
             turn_count -= 1
             print("??? What???")
-
+    
         # PERFORM CHECKS
         if opponent.active_monster.health <= 0:
             print("You win!")
