@@ -7,12 +7,12 @@ class Attack:
     * `cost`: The cost of the attack in mana, i.e. a dict of {ManaType: amount}.
     * `effects`: A list of effects of type `Effect`.
     """
-    def __init__(self, name, damage, cost, effects):
-        self.name = name
-        self.damage = damage
-        self.cost = cost
-        self.effects = effects
-    
+    def __init__(self, **kwargs):
+        self.title      = kwargs['title']           # str
+        self.damage     = kwargs['damage']          # int
+        self.cost       = kwargs['cost']            # dict: ManaType: int
+        #self.effects    = kwargs['effects']         # list: Effect
+
     def execute(self, attacker, target):
         if not attacker.active_monster.has_mana(self.cost):
             print(f"Not enough mana for {self.name}!")
@@ -20,7 +20,7 @@ class Attack:
         
         attacker.active_monster.spend_mana(self.cost)
         target.active_monster.take_damage(self.damage)
-        print(f"{self.name} dealt {self.damage} damage!")
+        print(f"{self.title} dealt {self.damage} damage!")
 
 class Effect:
     """"""

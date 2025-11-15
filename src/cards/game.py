@@ -4,16 +4,14 @@ from models.player  import PlayerUnit
 from termio.view    import TerminalView
 from termio.termio  import CommandHandler
 from termio.color   import TCol
-from .enums  import ManaType
-from .combat import Attack
 from .carddata import give_test_card
 
 # Insubstantiating the player states.
 player = PlayerUnit()
 opponent = PlayerUnit()
 
-attack_flamethrower = Attack("Flamethrower", 50, {ManaType.FIRE: 2}, None)
-attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1}, None)
+#attack_flamethrower = Attack("Flamethrower", 50, {ManaType.FIRE: 2}, None)
+#attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1}, None)
 
 # Template cards
 #dbCard1 = MonsterTemplate('Insipid Atom', 50, [attack_flamethrower])
@@ -22,8 +20,8 @@ attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1}, None)
 #dbCard3 = MonsterTemplate('Crotchety Ion', 150, [attack_scratch])
 #dbCard4 = MonsterTemplate('Querulous Photon', 120, [attack_flamethrower])
 
-c1 = MonsterTemplate(give_test_card(1))
-c2 = MonsterTemplate(give_test_card(2))
+c1 = MonsterTemplate(**give_test_card(1))
+c2 = MonsterTemplate(**give_test_card(2))
 
 
 # Temporary setting activity
