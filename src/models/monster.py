@@ -34,10 +34,10 @@ class MonsterTemplate(CardTemplate):
         self.attacks        = kwargs['attacks']         # dict: Attack
 
         # Perform insubstantiation to optional fields from kwargs.
-        #self.abilities      = kwargs['abilities']       # list: Ability
+        self.abilities      = kwargs['abilities']       # list: Ability
         self.level          = kwargs['level']           # int
-        #self.dex_data       = kwargs['dex_data']        # dict: JSON-esque
-        #self.print_data     = kwargs['print_data']      # dict: JSON-esque
+        self.dex_data       = kwargs['dex_data']        # dict: JSON-esque
+        self.print_data     = kwargs['print_data']      # dict: JSON-esque
 
         importedAtkData = []
         for atks in self.attacks:
@@ -63,6 +63,13 @@ class MonsterCard(MonsterTemplate):
         self.health = card.health
         self.attacks = card.attacks
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
+        self.stage = card.stage
+        self.type = card.type
+        self.mana_type = card.mana_type
+        self.weak_type = card.weak_type
+        self.weak_mult = card.weak_mult
+        self.resist_type = card.resist_type
+        self.resist_val = card.resist_val
 
     def use_attack(self, attack_index, player, target):
         """Performs attack from the given index. Attacks are listed (right now) in a list
