@@ -31,15 +31,54 @@ class PlayerUnit():
     def __init__(self):
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
         self.field = []
+        self.hand = []
+        self.deck = []
+        self.discard = []
+        self.prize = []
         self.active_monster = None
 
+    #! FIELD METHODS
     def add_to_field(self, card):
         if len(self.field) >= self.CONST_MAX_CARDS:
             print("Too many cards in deck!")
-            return
+            return False
         self.field.append(MonsterCard(card))
-        print(f"{card.title} (id: {card.id}) added to field: {self.field}")
+        return True
 
+    #! HAND METHODS
+    def add_to_hand(self, card):
+        self.hand.append(MonsterCard(card))
+
+    def retrieve_hand(self, card_index):
+        pass
+
+    def check_in_hand(self):
+        pass
+    
+    def remove_from_hand(self):
+        pass
+
+    #! DISCARD METHODS
+    def add_to_discard(self):
+        pass
+
+    def retrieve_discard(self):
+        pass
+
+    def check_in_discard(self):
+        pass
+
+    def remove_from_discard(self):
+        pass
+
+    #! ACTIVE MONSTER METHODS
+    def set_active_monster(self, card_in_hand):
+        if self.hand[card_in_hand].type != CardType.MONSTER:
+            return False
+        self.active_monster = self.hand[card_in_hand]
+        return True
+
+    #! CHECK FOR MANA
     def has_mana(self, cost):
         """Checks whether there is sufficent mana in the mana pool for performing
         an action that costs mana. 'cost' is a dict like {ManaType.FIRE: 2, ...}
@@ -72,7 +111,8 @@ class PlayerUnit():
             mana_type = ManaType(mana_type_str.lower())
             self.mana_pool[mana_type] += qty
         except (KeyError, ValueError):
-            print(f"Invalid mana type: {mana_type_str}")
+            # Let the caller handle the error message
+            return False
 
     def spend_mana(self, cost):
         """Spends mana during the exertion of a move that costs a specific quantity of mana.
@@ -93,19 +133,4 @@ class PlayerUnit():
                 to_spend = min(available, colorless_needed)
                 self.mana_pool[mana_type] -= to_spend
                 colorless_needed -= to_spend
-
-    def set_active_monster(self, card_in_field):
-        print(f"Activating {self.field[card_in_field]}")
-        self.active_monster = self.field[card_in_field]
-        print(f"Active monster set to {self.field[card_in_field]}")
-
-    def print_mana_pool(self):
-        """This strange, temporary function serves merely to test
-        mana quantities."""
-        for type in self.mana_pool:
-            if self.mana_pool[ManaType(type)] != 0:
-                print(str(ManaType(type).value[:2].upper()) + 
-                      str(self.mana_pool[ManaType(type)]), end=" ")
-        print("")
-
         

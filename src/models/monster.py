@@ -30,8 +30,12 @@ class MonsterCard(MonsterTemplate):
 
     def use_attack(self, attack_index, player, target):
         """Performs attack from the given index"""
-        attack = self.attacks[attack_index]
-        attack.execute(player, target)
+        if 0 <= attack_index < len(self.attacks):
+            attack = self.attacks[attack_index]
+            attack.execute(player, target)
+        else:
+            print(f"Invalid attack index: {attack_index}. {self.title} does not have an attack at that position.")
+            return False
     
     def take_damage(self, damage):
         self.health -= damage

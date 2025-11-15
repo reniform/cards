@@ -16,9 +16,9 @@ class StageType(Enum):
     """
     'StageType' lists the stages in incremental order.
     """
-    BASIC  = 2
-    STAGE1 = 3
-    STAGE2 = 4
+    BASIC    = 2
+    STAGEONE = 3
+    STAGETWO = 4
 
 class ManaType(Enum):
     """
