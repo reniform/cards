@@ -6,7 +6,7 @@ from termio.termio  import CommandHandler
 from termio.color   import TCol
 from .enums  import ManaType
 from .combat import Attack
-from ...data.testpy.carddata import *
+from ..database.carddata import give_test_card
 
 # Insubstantiating the player states.
 player = PlayerUnit()
@@ -16,18 +16,21 @@ attack_flamethrower = Attack("Flamethrower", 50, {ManaType.FIRE: 2}, None)
 attack_scratch      = Attack("Scratch", 20, {ManaType.COLORLESS: 1}, None)
 
 # Template cards
-dbCard1 = MonsterTemplate('Insipid Atom', 50, [attack_flamethrower])
-dbCard2 = MonsterTemplate('Petulant Beast', 50, [attack_scratch])
+#dbCard1 = MonsterTemplate('Insipid Atom', 50, [attack_flamethrower])
+#dbCard2 = MonsterTemplate('Petulant Beast', 50, [attack_scratch])
 
-dbCard3 = MonsterTemplate('Crotchety Ion', 150, [attack_scratch])
-dbCard4 = MonsterTemplate('Querulous Photon', 120, [attack_flamethrower])
+#dbCard3 = MonsterTemplate('Crotchety Ion', 150, [attack_scratch])
+#dbCard4 = MonsterTemplate('Querulous Photon', 120, [attack_flamethrower])
+
+c1 = MonsterTemplate(give_test_card(1))
+c2 = MonsterTemplate(give_test_card(2))
+
 
 # Temporary setting activity
-player.add_to_hand(dbCard1)
-player.add_to_hand(dbCard3)
+player.add_to_hand(c1)
 player.set_active_monster(0)
 
-opponent.add_to_hand(dbCard2)
+opponent.add_to_hand(c2)
 opponent.set_active_monster(1)
 
 def main():
