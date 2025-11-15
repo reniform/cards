@@ -37,7 +37,13 @@ class MonsterCard(MonsterTemplate):
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
 
     def use_attack(self, attack_index, player, target):
-        """Performs attack from the given index"""
+        """Performs attack from the given index. Attacks are listed (right now) in a list
+        (though a dict would be better hahe).
+        
+        :param attack_index: The attack to be performed in the list.
+        :param player: The performer of the attack.
+        :param target: The target of the attack.
+        """
         if 0 <= attack_index < len(self.attacks):
             attack = self.attacks[attack_index]
             attack.execute(player, target)
@@ -46,13 +52,18 @@ class MonsterCard(MonsterTemplate):
             return False
     
     def take_damage(self, damage):
+        """
+        Reduces the monster's health by the given amount.
+        """
         self.health -= damage
 
     #! MANA METHODS
     def has_mana(self, cost):
         """
         Checks whether there is sufficent mana in the mana pool for performing
-        an action that costs mana. 'cost' is a dict like {ManaType.FIRE: 2, ...}
+        an action that costs mana.
+
+        :param cost: is the attack's cost—usually a dict like `{ManaType.FIRE: 2, ...}`
         """
 
         # Make a copy to not mutate original: what remains will be 
@@ -75,7 +86,10 @@ class MonsterCard(MonsterTemplate):
         return True
     
     def spend_mana(self, cost):
-        """Spends mana during the exertion of a move that costs a specific quantity of mana.
+        """
+        Spends mana during the exertion of a move that costs a specific quantity of mana.
+
+        :param cost: Mana quantity, expressed in a dict like `{ManaType.FIRE: 2, ...}`, to be subtracted from the monster's mana pool.
         """
         # Pay non-colorless costs first
         for mana_type, amount in cost.items():

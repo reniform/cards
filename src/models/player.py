@@ -41,9 +41,11 @@ class PlayerUnit():
     #! FIELD METHODS
     def add_to_field(self, card):
         """
-        Adds a card to the general field.
+        Adds a card to the general field. The *field* is the list of all cards in the specific player space, including the deck, the hand, the bench, etc.
+        TODO: Move max card check to the deck methods.
+
         :param card: The card to be added.
-        :return: True if the card was successfully added, False otherwise.
+        :return: `True` if the card was successfully added; `False` otherwise.
         """
         if len(self.field) >= self.CONST_MAX_CARDS:
             print("Too many cards in deck!")
@@ -53,6 +55,12 @@ class PlayerUnit():
 
     #! HAND METHODS
     def add_to_hand(self, card):
+        """
+        Adds a card to the hand.
+        TODO: The `card_id` implementation will have to be extended to the field method. Cards should be added to the field, then to the deck.
+
+        :param card: The card to be added. `add_to_hand()` retrieves the card's unique integer ID, by which it performs the operation.
+        """
         self.hand[card.id] = MonsterCard(card)
 
     def retrieve_hand(self, card_index):
@@ -64,13 +72,21 @@ class PlayerUnit():
     def remove_from_hand(self, card_id):
         """
         Removes and returns a card from the hand by its ID.
+
+        :param card_id: The card ID of the card to be removed from within the hand.
         """
         return self.hand.pop(card_id, None)
 
 
     #! DISCARD METHODS
-    def add_to_discard(self):
-        pass
+    def add_to_discard(self, card):
+        """
+        Adds a card to the discard pile.
+        TODO: Why does `add_to_discard()` take a Card? Should a `src` be specified?
+
+        :param card: The card to be added. `add_to_hand()` retrieves the card's unique integer ID, by which it performs the operation.
+        """
+        self.discard[card.id] = card
 
     def retrieve_discard(self):
         pass
@@ -84,12 +100,16 @@ class PlayerUnit():
     #! BENCH METHODS
     def add_to_bench(self, card_id):
         """
-        Adds a card to the bench **from the hand**.
+        Adds a card to the bench **from the hand**. To my understanding, cards should move always from the hand to the bench; this is why `add_to_bench` looks from within the hand.
+
+        :param card_id: The card ID of the card to be added to the bench.
+        :return: `True` if the card was successfully added to the bench; `False` otherwise.
         """
         # Check against limit on amount of bench cards
         if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
             print("Too many cards in bench!")
             return False
+        return True
         
         # Perform the bench operation:
         card_to_bench = self.hand[card_id]
@@ -106,11 +126,20 @@ class PlayerUnit():
     def remove_from_bench(self, card_id):
         """
         Removes and returns a card from the bench by its ID.
+
+        :param card_id: The card ID of the card to be removed from within the bench.
+        :return: The removed card through `pop()`.
         """
         return self.bench.pop(card_id, None)
 
     #! ACTIVE MONSTER METHODS
     def set_active_monster(self, card_id):
+        """
+        Sets the active monster in the player's `active_monster` variable. The active monster is the chief actor in the player space, and is called upon to perform actions.
+
+        :param card_id: The card ID of the card to be set as the active monster.
+        :return: `True` if the card was successfully set as the active monster; `False` otherwise.
+        """
         if self.hand[card_id].type != CardType.MONSTER:
             return False
         self.active_monster = self.hand[card_id]
@@ -119,10 +148,19 @@ class PlayerUnit():
 
     #! CHECK FOR MANA
 
-    def add_mana(self, target, mana_type_str, qty):
-        """Adds mana of a specific type to the active monster, and catches an exception
-        if an invalid mana type is typed.
+    def add_mana(self, target, mana_type_str, qty=1):
         """
+        Adds mana of a specific type to the active monster, and catches an exception if an invalid mana type is typed.
+        The captured exception should be handled by the caller.
+
+        :param target: The target card upon which the mana will be added. A check is performed to see whether the target card is a monster.
+        :param mana_type_str: String of the mana type, checked against the `ManaType` enum.
+        :param qty: The amount of mana to be added; by default, 1.
+        :return: `True` if the mana was successfully added; `False` otherwise.
+        """
+        if target.card.type != CardType.MONSTER:
+            print("Target is not a monster!")
+            return False
         try:
             mana_type = ManaType(mana_type_str.lower())
             target.mana_pool[mana_type] += qty

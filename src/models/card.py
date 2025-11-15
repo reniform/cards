@@ -3,6 +3,7 @@ class CardTemplate:
     Superclass for all cards, for
     * assigning a unique ID to each subclass card object, and;
     * creating a list that keeps track of all cards active in the game field.
+    `MonsterTemplate`, `UtilityTemplate`, and `ManaTemplate` all inherit from `CardTemplate.`
     """
     _next_id = 0
     _all_cards = {}
@@ -34,13 +35,15 @@ class CardTemplate:
     @classmethod
     def get_all_cards(cls):
         """
-        Returns a list of all card instances ever created.
+        Returns the list of all cards within the game field. 
+
+        :return: A list of all card objects
         """
         return list(cls._all_cards.values())
 
     def __repr__(self):
         """
-        Provides a developer-friendly string representation of the card.
+        Outputs as: <CardTitle (ID: #)>.
         """
         # Attempts to find a 'title' attribute for a more descriptive name
         name = getattr(self, 'title', self.__class__.__name__)
