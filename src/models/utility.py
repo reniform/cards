@@ -1,6 +1,7 @@
 from cards.enums import CardType
+from card import CardTemplate
 
-class UtilityTemplate:
+class UtilityTemplate(CardTemplate):
     """
     Immutable instance and static data source for monster cards. Holds the following values:
     ### Basic metadata

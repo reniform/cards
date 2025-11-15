@@ -1,6 +1,7 @@
 from cards.enums import CardType
+from card import CardTemplate
 
-class ManaTemplate:
+class ManaTemplate(CardTemplate):
     type = CardType.MANA
 
 class ManaCard(ManaTemplate):
