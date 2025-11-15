@@ -14,14 +14,13 @@ class CardTemplate:
 
         # Assign the next available unique ID to this card instance
         self.id = CardTemplate._next_id
-        CardTemplate._next_id += 1
 
         # Add this new card instance to the central registry.
         CardTemplate._all_cards[self.id] = self
 
         # Increment the class-level counter for the next card.
         CardTemplate._next_id += 1
-        
+    
     @classmethod
     def get_card_by_id(cls, card_id):
         """

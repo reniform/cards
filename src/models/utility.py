@@ -1,5 +1,5 @@
 from cards.enums import CardType
-from card import CardTemplate
+from .card import CardTemplate
 
 class UtilityTemplate(CardTemplate):
     """

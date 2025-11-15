@@ -1,6 +1,5 @@
 from cards.enums import CardType, ManaType
-from card import CardTemplate
-
+from .card import CardTemplate
 
 class MonsterTemplate(CardTemplate):
     """
@@ -12,9 +11,10 @@ class MonsterTemplate(CardTemplate):
     * `attacks`: A list of attack-like actions to be taken by the monster in play. They are of type `Attack`, and may be chained with effects.
     """
     type = CardType.MONSTER
-    id   = 1
+    id = None
 
     def __init__(self, title, health, attacks):
+        super().__init__()
         self.title = title
         self.health = health
         self.max_health = health
@@ -30,6 +30,7 @@ class MonsterCard(MonsterTemplate):
 
     def __init__(self, card):
         self.card = card
+        self.id = card.id
         self.title = card.title
         self.health = card.health
         self.attacks = card.attacks

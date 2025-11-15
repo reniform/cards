@@ -12,7 +12,7 @@ class TerminalView:
         if not player.active_monster:
             return "No active monster."
         
-        header = f"{TCol.HEADER}{TCol.BOLD if bold else ''}{player.active_monster.title}\t\tHP {player.active_monster.health}{TCol.ENDC}"
+        header = f"{TCol.HEADER}{TCol.BOLD if bold else ''}{player.active_monster.title} {player.active_monster.id} \t\tHP {player.active_monster.health}{TCol.ENDC}"
         mana_pool = TerminalView.get_mana_pool_string(player.active_monster)
         return f"{header}\t{mana_pool}"
 
@@ -30,5 +30,5 @@ class TerminalView:
             return "Your hand is empty."
         hand_strings = []
         for hand_index, card in enumerate(player.hand, start=1):
-            hand_strings.append(f"[{hand_index}]: {card.title}\t{card.type.value.upper()}")
+            hand_strings.append(f"[{hand_index}]: {card.title} {card.id}\t{card.type.value.upper()}")
         return "\n".join(hand_strings)
