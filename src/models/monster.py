@@ -1,4 +1,4 @@
-from cards.enums import CardType
+from cards.enums import CardType, ManaType
 
 class MonsterTemplate:
     """
@@ -31,6 +31,7 @@ class MonsterCard(MonsterTemplate):
         self.title = card.title
         self.health = card.health
         self.attacks = card.attacks
+        self.mana_pool = {mana_type: 0 for mana_type in ManaType}
 
     def use_attack(self, attack_index, player, target):
         """Performs attack from the given index"""
@@ -43,3 +44,50 @@ class MonsterCard(MonsterTemplate):
     
     def take_damage(self, damage):
         self.health -= damage
+
+    #! MANA METHODS
+    def has_mana(self, cost):
+        """
+        Checks whether there is sufficent mana in the mana pool for performing
+        an action that costs mana. 'cost' is a dict like {ManaType.FIRE: 2, ...}
+        """
+
+        # Make a copy to not mutate original: what remains will be 
+        remaining_pool = self.mana_pool.copy()
+
+        # First, pay specific mana costs. Colorless costs are handled later
+        for mana_type, amount in cost.items():
+            if mana_type == ManaType.COLORLESS:
+                continue
+            if self.mana_pool.get(mana_type, 0) < amount:
+                return False
+            remaining_pool[mana_type] -= amount
+
+        # Handle colorless costs
+        if ManaType.COLORLESS in cost:
+            total_remaining = sum(remaining_pool.values())
+            if total_remaining < cost[ManaType.COLORLESS]:
+                return False
+        
+        return True
+    
+    def spend_mana(self, cost):
+        """Spends mana during the exertion of a move that costs a specific quantity of mana.
+        """
+        # Pay non-colorless costs first
+        for mana_type, amount in cost.items():
+            if mana_type == ManaType.COLORLESS:
+                continue
+            self.mana_pool[mana_type] -= amount
+        
+        # Pay colorless costs
+        if ManaType.COLORLESS in cost:
+            colorless_needed = cost[ManaType.COLORLESS]
+            for mana_type in ManaType:
+                if colorless_needed <= 0:
+                    break
+                available = self.mana_pool[mana_type]
+                to_spend = min(available, colorless_needed)
+                self.mana_pool[mana_type] -= to_spend
+                colorless_needed -= to_spend
+        

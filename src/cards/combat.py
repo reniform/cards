@@ -14,11 +14,11 @@ class Attack:
         self.effects = effects
     
     def execute(self, attacker, target):
-        if not attacker.has_mana(self.cost):
+        if not attacker.active_monster.has_mana(self.cost):
             print(f"Not enough mana for {self.name}!")
             return
         
-        attacker.spend_mana(self.cost)
+        attacker.active_monster.spend_mana(self.cost)
         target.active_monster.take_damage(self.damage)
         print(f"{self.name} dealt {self.damage} damage!")
 

@@ -19,7 +19,6 @@ class CommandHandler:
             print("Invalid index.")
         print(player.bench[0].title)
         
-    
     @staticmethod
     def handle_mana(player, opponent, *args):
         if not args:
@@ -35,7 +34,7 @@ class CommandHandler:
                 print(f"Invalid quantity: {args[1]}")
                 return
         
-        player.add_mana(mana_type, qty)
+        player.add_mana(player.active_monster, mana_type, qty)
     
     @staticmethod
     def handle_exit(player, opponent, *args):
