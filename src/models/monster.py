@@ -1,4 +1,5 @@
 from cards.enums import CardType, ManaType
+from cards.combat import Attack
 from .card import CardTemplate
 
 class MonsterTemplate(CardTemplate):
@@ -21,22 +22,30 @@ class MonsterTemplate(CardTemplate):
         self.type           = kwargs['type']            # CardType
         self.title          = kwargs['title']           # str
         self.stage          = kwargs['stage']           # StageType
-        self.mana_type      = kwargs['manaType']        # ManaType
-        self.evolve_from    = kwargs['evolveFrom']      # str ?
-        self.evolve_to      = kwargs['evolveTo']        # str ?
+        self.mana_type      = kwargs['mana_type']       # ManaType
+        self.evolve_from    = kwargs['evolve_from']     # str ?
+        self.evolve_to      = kwargs['evolve_to']       # str ?
         self.health         = kwargs['health']          # int
-        self.weak_type      = kwargs['weakType']        # ManaType
-        self.weak_mult      = kwargs['weakMult']        # int
-        self.resist_type    = kwargs['resistType']      # ManaType
-        self.resist_mult    = kwargs['resistMult']      # int
-        self.retreat_val    = kwargs['retreatVal']      # int
+        self.weak_type      = kwargs['weak_type']       # ManaType
+        self.weak_mult      = kwargs['weak_mult']       # int
+        self.resist_type    = kwargs['resist_type']     # ManaType
+        self.resist_val     = kwargs['resist_val']      # int
+        self.retreat_val    = kwargs['retreat_val']     # int
         self.attacks        = kwargs['attacks']         # dict: Attack
 
         # Perform insubstantiation to optional fields from kwargs.
-        self.abilities      = kwargs['abilities']       # list: Ability
+        #self.abilities      = kwargs['abilities']       # list: Ability
         self.level          = kwargs['level']           # int
-        self.dex_data       = kwargs['dexData']         # dict: JSON-esque
-        self.print_data     = kwargs['printData']       # dict: JSON-esque
+        #self.dex_data       = kwargs['dex_data']        # dict: JSON-esque
+        #self.print_data     = kwargs['print_data']      # dict: JSON-esque
+
+        importedAtkData = []
+        for atks in self.attacks:
+            Attack(**atks)
+            importedAtkData.append(Attack(**atks))
+        self.attacks = importedAtkData
+
+            
 
 
 class MonsterCard(MonsterTemplate):
