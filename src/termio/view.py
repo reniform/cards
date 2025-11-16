@@ -1,5 +1,5 @@
 from models.player import PlayerUnit
-from cards.enums import ManaType, CardType, StageType
+from core.enums import ManaType, CardType, StageType
 from enum import Enum
 from .color import TCol
 import colorful as cf

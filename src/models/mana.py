@@ -1,4 +1,4 @@
-from cards.enums import CardType
+from core.enums import CardType
 from .card import CardTemplate
 
 class ManaTemplate(CardTemplate):

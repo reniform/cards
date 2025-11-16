@@ -1,5 +1,5 @@
 import os
-from cards.enums import CardType, StageType
+from core.enums import CardType, StageType
 from termio.view import TerminalView
 
 

@@ -1,6 +1,6 @@
 import random
 from models.monster import MonsterCard
-from cards.enums import ManaType, CardType
+from core.enums import ManaType, CardType
 
 
 class PlayerUnit:

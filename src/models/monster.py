@@ -1,5 +1,5 @@
-from cards.enums import CardType, ManaType
-from cards.combat import Attack
+from core.enums import CardType, ManaType
+from core.combat import Attack
 from .card import CardTemplate
 
 class MonsterTemplate(CardTemplate):

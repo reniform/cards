@@ -1,7 +1,7 @@
-from cards.game import GameState
+from core.game import GameState
 from models.player import PlayerUnit
-from cards.carddata import give_test_card
-from cards.enums import CardType
+from core.carddata import give_test_card
+from core.enums import CardType
 from models.monster import MonsterTemplate, MonsterCard
 from models.utility import UtilityTemplate, UtilityCard
 from models.mana import ManaTemplate, ManaCard
