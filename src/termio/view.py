@@ -53,13 +53,13 @@ class TerminalView:
 
         # Assemble the parts.
         parts = [
-            f"{cf.bold}{cf.red if opposite else cf.white}{padded_title}{cf.reset}",
+            f"{cf.bold}{cf.red if opposite else cf.white}{padded_title}{cf.reset}\t",
+            f"{cf.tomato}in deck{cf.reset}: {len(player.deck)}",
             f"{cf.tomato}in hand{cf.reset}: {len(player.hand)}",
-            f"{cf.tomato}in bench{cf.reset}: {len(player.bench)}",
             f"{cf.tomato}in discard{cf.reset}: {len(player.discard)}",
             f"{cf.gold}{padded_prize}{cf.reset}"
         ]
-        return "\t".join(parts)
+        return "  ".join(parts)
 
     def print_bench() -> str:
         pass

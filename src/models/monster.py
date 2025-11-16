@@ -45,9 +45,6 @@ class MonsterTemplate(CardTemplate):
             importedAtkData.append(Attack(**atks))
         self.attacks = importedAtkData
 
-            
-
-
 class MonsterCard(MonsterTemplate):
     """
     Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.

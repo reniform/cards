@@ -1,7 +1,8 @@
+import random
 from cards.enums import ManaType, CardType
 
 
-class PlayerUnit():
+class PlayerUnit:
     """
     'PlayerUnit' holds all player data as pertains to the active player state, including:
     played cards, cards in hand, deck cards, discard pile, and prize cards, among other states.
@@ -21,11 +22,12 @@ class PlayerUnit():
     ### Debug:
     * `print_mana_pool()` Print mana pool in the terminal debug output.
     """
+
     type = CardType.MONSTER
     CONST_MAX_CARDS = 60
     CONST_MAX_BENCH_CARDS = 5
 
-    def __init__(self, title='Player'):
+    def __init__(self, title="Player"):
         self.title = title
         self.field = {}
         self.deck = {}
@@ -50,14 +52,65 @@ class PlayerUnit():
             return False
         self.field[card.id] = card
         return True
+    
+    #! DECK METHODS
+    def initialize_deck(self):
+        """
+        Populates the deck from the player's field of cards.
+        Stops when the deck reaches the maximum allowed card count.
+        """
+        if self.deck:
+            print("Deck is already initialized.")
+            return
+
+        for card_id, card in self.field.items():
+            if len(self.deck) >= self.CONST_MAX_CARDS:
+                break
+            self.deck[card_id] = card
+
+    def shuffle_deck(self):
+        """
+        Performs a shuffle of the deck using random.
+        """
+        # Perform a check for an initialized deck.
+        if not self.deck:
+            print("Deck is not initialized.")
+            return
+        
+        # Convert the dictionary's items to a list for shuffling.
+        deck_items = list(self.deck.items())
+        random.shuffle(deck_items)
+
+        # Recreate the deck as a new dictionary with the shuffled order.
+        self.deck = dict(deck_items)
+
+    def remove_from_deck(self, qty):
+        """
+        Removes and returns a specified number of cards from the deck.
+
+        :param qty: The number of cards to be removed.
+        """
+        
+        # Perform a check for an initialized deck.
+        if not self.deck:
+            print("Deck is not initialized.")
+            return
+
+        popped_cards = {}
+        for i in range(qty):
+            if not self.deck:
+                print("Deck is empty.")
+                break
+            card_id, card = self.deck.popitem()
+            popped_cards[card_id] = card
+        return popped_cards
 
     #! HAND METHODS
     def add_to_hand(self, card):
         """
         Adds a card to the hand.
-        TODO: The `card_id` implementation will have to be extended to the field method. Cards should be added to the field, then to the deck.
 
-        :param card: The card to be added. `add_to_hand()` retrieves the card's unique integer ID, by which it performs the operation.
+        :param card: The card object to be added.
         """
         self.hand[card.id] = card
 
@@ -66,7 +119,7 @@ class PlayerUnit():
 
     def check_in_hand(self):
         pass
-    
+
     def remove_from_hand(self, card_id):
         """
         Removes and returns a card from the hand by its ID.
@@ -74,7 +127,15 @@ class PlayerUnit():
         :param card_id: The card ID of the card to be removed from within the hand.
         """
         return self.hand.pop(card_id, None)
-
+    
+    #! DECK -> HAND
+    def draw_from_deck(self, qty=1):
+        """Draws a specified number of cards from the deck and adds them to the hand."""
+        drawn_cards = self.remove_from_deck(qty)
+        if not drawn_cards:
+            return
+        for card in drawn_cards.values():
+            self.add_to_hand(card)
 
     #! DISCARD METHODS
     def add_to_discard(self, card):
@@ -108,7 +169,7 @@ class PlayerUnit():
             print("Too many cards in bench!")
             return False
         return True
-        
+
         # Perform the bench operation:
         card_to_bench = self.hand[card_id]
         self.bench[card_id] = card_to_bench

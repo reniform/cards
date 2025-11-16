@@ -47,6 +47,12 @@ def generate_deck_from_list(deck_list, player_unit):
 generate_deck_from_list(give_test_card(100), player_unit=player)
 generate_deck_from_list(give_test_card(100), player_unit=opponent)
 
+player.initialize_deck()
+player.shuffle_deck()
+opponent.initialize_deck()
+opponent.shuffle_deck()
+player.draw_from_deck(7)
+opponent.draw_from_deck(7)
 
 def main():
     """
@@ -82,6 +88,6 @@ def main():
             print("??? What???")
     
         # PERFORM CHECKS
-        if opponent.active_monster.health <= 0:
+        if opponent.active_monster and opponent.active_monster.health <= 0:
             print("You win!")
             os._exit(1)
