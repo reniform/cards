@@ -31,7 +31,7 @@ class MonsterTemplate(CardTemplate):
         self.resist_type    = kwargs['resist_type']     # ManaType
         self.resist_val     = kwargs['resist_val']      # int
         self.retreat_val    = kwargs['retreat_val']     # int
-        self.attacks        = kwargs['attacks']         # dict: Attack
+        self.attacks        = [Attack(**atk_data) for atk_data in kwargs['attacks']]
 
         # Perform insubstantiation to optional fields from kwargs.
         self.abilities      = kwargs['abilities']       # list: Ability
@@ -39,34 +39,16 @@ class MonsterTemplate(CardTemplate):
         self.dex_data       = kwargs['dex_data']        # dict: JSON-esque
         self.print_data     = kwargs['print_data']      # dict: JSON-esque
 
-        importedAtkData = []
-        for atks in self.attacks:
-            Attack(**atks)
-            importedAtkData.append(Attack(**atks))
-        self.attacks = importedAtkData
-
-class MonsterCard(MonsterTemplate):
+class MonsterCard(CardTemplate):
     """
     Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.
     """
-    #def __init__(self, title, health, strength, attacks):
-        #pass
-        #super().__init__(title, health, strength, attacks)
 
     def __init__(self, card):
+        super().__init__()
         self.card = card
-        self.id = card.id
-        self.title = card.title
-        self.health = card.health
-        self.attacks = card.attacks
+        self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
-        self.stage = card.stage
-        self.type = card.type
-        self.mana_type = card.mana_type
-        self.weak_type = card.weak_type
-        self.weak_mult = card.weak_mult
-        self.resist_type = card.resist_type
-        self.resist_val = card.resist_val
 
     def use_attack(self, attack_index, player, target):
         """Performs attack from the given index. Attacks are listed (right now) in a list
@@ -76,11 +58,11 @@ class MonsterCard(MonsterTemplate):
         :param player: The performer of the attack.
         :param target: The target of the attack.
         """
-        if 0 <= attack_index < len(self.attacks):
-            attack = self.attacks[attack_index]
+        if 0 <= attack_index < len(self.card.attacks):
+            attack = self.card.attacks[attack_index]
             attack.execute(player, target)
         else:
-            print(f"Invalid attack index: {attack_index}. {self.title} does not have an attack at that position.")
+            print(f"Invalid attack index: {attack_index}. {self.card.title} does not have an attack at that position.")
             return False
     
     def take_damage(self, damage):

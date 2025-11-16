@@ -70,9 +70,9 @@ class TerminalView:
             return "\t(No active monster)"
 
         # The player's active monster type, always two characters.
-        active_mon_mana_type = player.active_monster.mana_type.value[:1].upper() + player.active_monster.mana_type.value[1:2].lower()
+        active_mon_mana_type = player.active_monster.card.mana_type.value[:1].upper() + player.active_monster.card.mana_type.value[1:2].lower()
         # The player's active monster stage, always one character.
-        match player.active_monster.stage:
+        match player.active_monster.card.stage:
             case StageType.BASIC:
                 active_mon_stage = 'B'
             case StageType.STAGEONE:
@@ -80,20 +80,20 @@ class TerminalView:
             case StageType.STAGETWO:
                 active_mon_stage = '2'
         # The player's active monster id, padded for space.
-        padded_id = f"{player.active_monster.id:03d}"
+        padded_id = f"{player.active_monster.card.id:03d}"
         # The player's active monster title, padded for space.
-        active_mon_title = f"{player.active_monster.title:<12}"
+        active_mon_title = f"{player.active_monster.card.title:<12}"
         # The player's active monster health and max health.
         active_mon_health = f"{player.active_monster.health:3d}"
-        active_mon_max_health = f"{player.active_monster.health:3d}"
+        active_mon_max_health = f"{player.active_monster.card.health:3d}"
         # The player's status
         # TODO IMPLEMENT STATUS EFFECTS
         
         parts = [
             "\t",
-            f"{ManaColor[player.active_monster.mana_type.name].value}{active_mon_mana_type}{cf.reset}",
+            f"{ManaColor[player.active_monster.card.mana_type.name].value}{active_mon_mana_type}{cf.reset}",
             f"{active_mon_stage} [{cf.darkSlateGray}{padded_id}{cf.reset}]",
-            f"{ManaColor[player.active_monster.mana_type.name].value}{cf.bold if Bold else ''}{active_mon_title}{cf.reset}",
+            f"{ManaColor[player.active_monster.card.mana_type.name].value}{cf.bold if Bold else ''}{active_mon_title}{cf.reset}",
             f"{active_mon_health}/{active_mon_max_health}",
             f"{TerminalView.get_mana_pool_string(player.active_monster)}"
         ]
@@ -108,7 +108,7 @@ class TerminalView:
         if not player.active_monster:
             return "No active monster."
         
-        header = f"{TCol.HEADER}{TCol.BOLD if bold else ''}{player.active_monster.title} {player.active_monster.id} \t\tHP {player.active_monster.health}{TCol.ENDC}"
+        header = f"{TCol.HEADER}{TCol.BOLD if bold else ''}{player.active_monster.card.title} {player.active_monster.card.id} \t\tHP {player.active_monster.health}{TCol.ENDC}"
         mana_pool = TerminalView.get_mana_pool_string(player.active_monster)
         return f"{header}\t{mana_pool}"
 
@@ -119,5 +119,5 @@ class TerminalView:
             return "Your hand is empty."
         hand_strings = []
         for card_id, card in player.hand.items():
-            hand_strings.append(f"{card.title} {card_id}\t{card.type.value.upper()}")
+            hand_strings.append(f"[{card_id}] {card.card.title}\t{card.card.type.value.upper()}")
         return "\n".join(hand_strings)

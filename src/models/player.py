@@ -1,4 +1,5 @@
 import random
+from models.monster import MonsterCard
 from cards.enums import ManaType, CardType
 
 
@@ -168,7 +169,6 @@ class PlayerUnit:
         if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
             print("Too many cards in bench!")
             return False
-        return True
 
         # Perform the bench operation:
         card_to_bench = self.hand[card_id]
@@ -199,7 +199,7 @@ class PlayerUnit:
         :param card_id: The card ID of the card to be set as the active monster.
         :return: `True` if the card was successfully set as the active monster; `False` otherwise.
         """
-        if self.hand[card_id].type != CardType.MONSTER:
+        if self.hand[card_id].card.type != CardType.MONSTER:
             return False
         self.active_monster = self.hand[card_id]
         self.remove_from_hand(card_id)
@@ -217,7 +217,7 @@ class PlayerUnit:
         :param qty: The amount of mana to be added; by default, 1.
         :return: `True` if the mana was successfully added; `False` otherwise.
         """
-        if target.card.type != CardType.MONSTER:
+        if not isinstance(target, MonsterCard):
             print("Target is not a monster!")
             return False
         try:
