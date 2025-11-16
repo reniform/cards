@@ -1,8 +1,4 @@
 from cards.enums import ManaType, CardType
-from .monster import MonsterCard
-# Waiting upon utility and mana definitions.
-#from .utility import UtilityCard
-#from .mana import ManaCard
 
 
 class PlayerUnit():
@@ -52,7 +48,7 @@ class PlayerUnit():
         if len(self.field) >= self.CONST_MAX_CARDS:
             print("Too many cards in deck!")
             return False
-        self.field[card.id] = MonsterCard(card)
+        self.field[card.id] = card
         return True
 
     #! HAND METHODS
@@ -63,7 +59,7 @@ class PlayerUnit():
 
         :param card: The card to be added. `add_to_hand()` retrieves the card's unique integer ID, by which it performs the operation.
         """
-        self.hand[card.id] = MonsterCard(card)
+        self.hand[card.id] = card
 
     def retrieve_hand(self, card_index):
         pass

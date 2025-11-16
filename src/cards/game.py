@@ -1,5 +1,8 @@
 import os
-from models.monster import MonsterTemplate
+from cards.enums    import CardType
+from models.monster import MonsterTemplate, MonsterCard
+from models.utility import UtilityTemplate, UtilityCard
+from models.mana    import ManaTemplate, ManaCard
 from models.player  import PlayerUnit
 from termio.view    import TerminalView
 from termio.termio  import CommandHandler
@@ -20,16 +23,30 @@ opponent = PlayerUnit('Opponent')
 #dbCard3 = MonsterTemplate('Crotchety Ion', 150, [attack_scratch])
 #dbCard4 = MonsterTemplate('Querulous Photon', 120, [attack_flamethrower])
 
-c1 = MonsterTemplate(**give_test_card(1))
-c2 = MonsterTemplate(**give_test_card(2))
-
+c1 = MonsterCard(MonsterTemplate(**give_test_card(3)))
+c2 = MonsterCard(MonsterTemplate(**give_test_card(1)))
 
 # Temporary setting activity
-player.add_to_hand(c1)
-player.set_active_monster(0)
+#player.add_to_hand(c1)
+#player.set_active_monster(0)
+#opponent.add_to_hand(c2)
+#opponent.set_active_monster(1)
 
-opponent.add_to_hand(c2)
-opponent.set_active_monster(1)
+def generate_deck_from_list(deck_list, player_unit):
+    for card in deck_list:
+        match card['type']:
+            case CardType.MONSTER:
+                player_unit.add_to_field(MonsterCard(MonsterTemplate(**card)))
+            case CardType.UTILITY:
+                player_unit.add_to_field(UtilityCard(UtilityTemplate(**card)))
+            case CardType.MANA:
+                player_unit.add_to_field(ManaCard(ManaTemplate(**card)))
+            case _:
+                pass
+
+generate_deck_from_list(give_test_card(100), player_unit=player)
+generate_deck_from_list(give_test_card(100), player_unit=opponent)
+
 
 def main():
     """
@@ -44,7 +61,7 @@ def main():
         print(f'== {cf.bold} Turn [{turn_count}] {cf.reset} ======================================================================')
         print(TerminalView.print_player_data(opponent, opposite=True))
         print(TerminalView.print_active_monster(opponent))
-        print(TerminalView.print_active_monster(player))
+        print(TerminalView.print_active_monster(player, Bold=True))
         print(TerminalView.print_player_data(player))
         command = input("What will you do? :D ")
 

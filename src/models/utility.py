@@ -10,15 +10,19 @@ class UtilityTemplate(CardTemplate):
     * `effects`: A list of effects induced by the utility. They are of type `Effect`.
     """
     type = CardType.UTILITY
-    id   = 100
 
-    def __init__(self, title, flavor, effects):
-        self.title = title
-        self.flavor = flavor
-        self.effects = effects
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.title = kwargs['title']
+        # self.flavor = kwargs['flavor'] # Add these back as you define utility card data
+        # self.effects = kwargs['effects']
 
 class UtilityCard(UtilityTemplate):
     """
     Active and mutable instance of a utility card, instantiated from a `UtilityTemplate`.
     """
-    pass
+    def __init__(self, card):
+        self.card = card
+        self.id = card.id
+        self.title = card.title
+        self.type = card.type

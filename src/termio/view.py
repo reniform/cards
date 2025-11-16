@@ -57,7 +57,7 @@ class TerminalView:
             f"{cf.tomato}in hand{cf.reset}: {len(player.hand)}",
             f"{cf.tomato}in bench{cf.reset}: {len(player.bench)}",
             f"{cf.tomato}in discard{cf.reset}: {len(player.discard)}",
-            f"{padded_prize}"
+            f"{cf.gold}{padded_prize}{cf.reset}"
         ]
         return "\t".join(parts)
 
@@ -65,7 +65,10 @@ class TerminalView:
         pass
 
     @staticmethod
-    def print_active_monster(player) -> str:
+    def print_active_monster(player, Bold=False) -> str:
+        if not player.active_monster:
+            return "\t(No active monster)"
+
         # The player's active monster type, always two characters.
         active_mon_mana_type = player.active_monster.mana_type.value[:1].upper() + player.active_monster.mana_type.value[1:2].lower()
         # The player's active monster stage, always one character.
@@ -89,7 +92,8 @@ class TerminalView:
         parts = [
             "\t",
             f"{ManaColor[player.active_monster.mana_type.name].value}{active_mon_mana_type}{cf.reset}",
-            f"{active_mon_stage} [{cf.darkSlateGray}{padded_id}{cf.reset}] {active_mon_title}",
+            f"{active_mon_stage} [{cf.darkSlateGray}{padded_id}{cf.reset}]",
+            f"{ManaColor[player.active_monster.mana_type.name].value}{cf.bold if Bold else ''}{active_mon_title}{cf.reset}",
             f"{active_mon_health}/{active_mon_max_health}",
             f"{TerminalView.get_mana_pool_string(player.active_monster)}"
         ]
