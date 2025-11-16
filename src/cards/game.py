@@ -69,7 +69,9 @@ def main():
         print(TerminalView.print_active_monster(opponent))
         print(TerminalView.print_active_monster(player, Bold=True))
         print(TerminalView.print_player_data(player))
-        command = input("What will you do? :D ")
+        print(TerminalView.print_hand(player))
+        print(TerminalView.print_prompt())
+        command = input("perform an action! ==> ")
 
         parts = command.split()
         if not parts:

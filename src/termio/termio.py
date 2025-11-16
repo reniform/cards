@@ -1,8 +1,20 @@
 import os
 from termio.view import TerminalView
 
+
 class CommandHandler:
     def __init__(self):
+        pass
+
+    def handle_ability(player, opponent, *args):
+        pass
+
+    @staticmethod
+    def handle_activation(player, opponent, *args):
+        pass
+
+    @staticmethod
+    def handle_attach(player, opponent, *args):
         pass
 
     @staticmethod
@@ -23,13 +35,22 @@ class CommandHandler:
         except ValueError:
             print(f"Invalid index: {index}")
             return
-        
+
+    @staticmethod
+    def handle_evolve(player, opponent, *args):
+        pass
+
+    @staticmethod
+    def handle_exit(player, opponent, *args):
+        print("Exiting 'cards' program.")
+        os._exit(1)
+
     @staticmethod
     def handle_mana(player, opponent, *args):
         if not args:
             print("Usage: mana <type> [quantity]")
             return
-        
+
         mana_type = args[0]
         qty = 1
         if len(args) > 1:
@@ -38,26 +59,35 @@ class CommandHandler:
             except ValueError:
                 print(f"Invalid quantity: {args[1]}")
                 return
-        
+
         player.add_mana(player.active_monster, mana_type, qty)
-    
-    @staticmethod
-    def handle_exit(player, opponent, *args):
-        print("Exiting 'cards' program.")
-        os._exit(1)
 
     @staticmethod
     def handle_show(player, opponent, *args):
-        if args and args[0] == 'hand':
+        if args and args[0] == "hand":
             hand_string = TerminalView.get_hand_list_string(player)
             print(hand_string)
         else:
             print("Usage: show hand")
 
+    @staticmethod
+    def handle_retreat(player, opponent, *args):
+        pass
+
+    @staticmethod
+    def handle_utility(player, opponent, *args):
+        pass
+
     COMMANDS = {
-        'attack': handle_attack,
-        'bench': handle_bench,
-        'mana': handle_mana,
-        'exit': handle_exit,
-        'show': handle_show,
+        "ability": handle_ability,
+        "activate": handle_activation,
+        "attach": handle_attach,
+        "attack": handle_attack,
+        "bench": handle_bench,
+        "evolve": handle_evolve,
+        "exit": handle_exit,
+        "mana": handle_mana,
+        "show": handle_show,
+        "retreat": handle_retreat,
+        "utility": handle_utility,
     }

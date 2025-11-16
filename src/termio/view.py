@@ -3,6 +3,7 @@ from cards.enums import ManaType, CardType, StageType
 from enum import Enum
 from .color import TCol
 import colorful as cf
+import os
 
 class ManaColor(Enum):
     GRASS       = cf.forestGreen
@@ -35,7 +36,7 @@ class TerminalView:
     @staticmethod
     def print_player_data(player, opposite=False) -> str:
         # Pad the player title to 12 characters.
-        padded_title = f"{player.title.upper():<12}"
+        padded_title = f"{player.title.upper():<11}"
 
         # Draw the prize cards, of symbol [].
         prize_sprite = '[]'
@@ -53,7 +54,7 @@ class TerminalView:
 
         # Assemble the parts.
         parts = [
-            f"{cf.bold}{cf.red if opposite else cf.white}{padded_title}{cf.reset}\t",
+            f"{cf.bold}{cf.red if opposite else cf.white}{padded_title}{cf.reset}",
             f"{cf.tomato}in deck{cf.reset}: {len(player.deck)}",
             f"{cf.tomato}in hand{cf.reset}: {len(player.hand)}",
             f"{cf.tomato}in discard{cf.reset}: {len(player.discard)}",
@@ -98,9 +99,51 @@ class TerminalView:
             f"{TerminalView.get_mana_pool_string(player.active_monster)}"
         ]
         return " ".join(parts)
+    
+    @staticmethod 
+    def print_hand(player) -> str:
+        if not player.hand:
+            return "Your hand is empty."
+
+        try:
+            max_width = os.get_terminal_size().columns
+        except OSError:
+            max_width = 80  # Fallback for environments where terminal size can't be determined
+
+        lines = []
+        current_line = []
+        current_length = 0
+        separator = " | "
+
+        for card_id, hand_card in player.hand.items():
+            # Determine the color based on the card type
+            if hand_card.card.type == CardType.MONSTER:
+                color = ManaColor[hand_card.card.mana_type.name].value
+            elif hand_card.card.type == CardType.MANA:
+                color = ManaColor[hand_card.card.mana_type.name].value
+            else:
+                color = cf.white
+
+            # Format the card string
+            card_str_visible = f"[{card_id}] {hand_card.card.title}"
+            card_str_formatted = f"{color}{card_str_visible}{cf.reset}"
+
+            # Check if adding the new card exceeds the line width
+            if current_line and current_length + len(separator) + len(card_str_visible) > max_width:
+                lines.append(separator.join(current_line))
+                current_line = []
+                current_length = 0
+
+            current_line.append(card_str_formatted)
+            current_length += len(card_str_visible) + (len(separator) if current_line else 0)
+
+        if current_line:
+            lines.append(separator.join(current_line))
+
+        return "\n".join(lines)
 
     def print_prompt() -> str:
-        pass
+        return "=== actions: bench | evolve | activate | attach | utility | retreat | ability | ATTACK | view (id) | exit"
 
     @staticmethod
     def get_player_status_string(player: PlayerUnit, bold=False) -> str:
