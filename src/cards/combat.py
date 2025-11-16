@@ -15,7 +15,7 @@ class Attack:
 
     def execute(self, attacker, target):
         if not attacker.active_monster.has_mana(self.cost):
-            print(f"Not enough mana for {self.name}!")
+            print(f"Not enough mana for {self.title}!")
             return
         
         attacker.active_monster.spend_mana(self.cost)
