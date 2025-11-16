@@ -11,7 +11,12 @@ class CommandHandler:
         pass
 
     @staticmethod
-    def handle_activation(game_state, *args):
+    def handle_activation(game_state, *args) -> bool | bool:
+        """
+        Handles user input for monster activation (hand -> active monster).
+        
+        :return: A tuple of `False` (not a turn-ending action) and `True` (action completed successfully.)
+        """
         if not args:
             print("Usage: activate <card_id>")
 
@@ -31,7 +36,7 @@ class CommandHandler:
         pass
 
     @staticmethod
-    def handle_attack(game_state, *args):
+    def handle_attack(game_state, *args) -> bool | bool:
         # TODO: Allow user to specify which attack to use
         success = game_state.player.active_monster.use_attack(0, game_state.player, game_state.opponent)
         if success:
@@ -40,7 +45,7 @@ class CommandHandler:
         return (success, True) # End turn and redraw if successful
 
     @staticmethod
-    def handle_bench(game_state, *args):
+    def handle_bench(game_state, *args) -> bool | bool:
         hand_string = TerminalView.get_hand_list_string(game_state.player)
         print(hand_string)
         index = input("Select card to bench by displayed ID. ")
@@ -64,7 +69,7 @@ class CommandHandler:
         os._exit(1)
 
     @staticmethod
-    def handle_mana(game_state, *args):
+    def handle_mana(game_state, *args) -> bool | bool:
         if not args:
             print("Usage: mana <type> [quantity]")
             return (False, False)
@@ -79,10 +84,10 @@ class CommandHandler:
                 return (False, False)
 
         success = game_state.player.add_mana(game_state.player.active_monster, mana_type, qty)
-        return (False, success) # Redraw if successful, but don't end turn
+        return (success, False) # Redraw if successful, but don't end turn
 
     @staticmethod
-    def handle_show(game_state, *args):
+    def handle_show(game_state, *args) -> bool | bool:
         if args and args[0] == "hand":
             hand_string = TerminalView.get_hand_list_string(game_state.player)
             print(hand_string)

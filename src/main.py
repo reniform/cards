@@ -43,6 +43,13 @@ def main():
     player.draw_from_deck(7)
     opponent.draw_from_deck(7)
 
+    # Pre-activate an opponent monster for testing purposes.
+    for card_id, card in opponent.hand.items():
+        if card.card.type == CardType.MONSTER:
+            opponent.set_active_monster(card_id)
+            # This break ensures we only activate the first monster found.
+            break
+
     # 4. Create and run the game state
     game = GameState(player, opponent)
     game.run()
