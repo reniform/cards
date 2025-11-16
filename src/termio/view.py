@@ -142,8 +142,18 @@ class TerminalView:
 
         return "\n".join(lines)
 
-    def print_prompt() -> str:
-        return "=== actions: bench | evolve | activate | attach | utility | retreat | ability | ATTACK | view (id) | exit"
+    @staticmethod
+    def print_prompt(player: PlayerUnit) -> str:
+        parts = ["== actions:"]
+
+        # Add commands that are always available
+        parts.append("view [id] | show hand | exit")
+
+        if not player.active_monster:
+            parts.append("| activate")
+        else:
+            parts.append("| bench | evolve | attach | utility | retreat | ability | ATTACK")
+        return " ".join(parts)
 
     @staticmethod
     def get_player_status_string(player: PlayerUnit, bold=False) -> str:

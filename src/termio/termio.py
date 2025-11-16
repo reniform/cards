@@ -1,4 +1,5 @@
 import os
+from cards.enums import CardType, StageType
 from termio.view import TerminalView
 
 
@@ -6,50 +7,67 @@ class CommandHandler:
     def __init__(self):
         pass
 
-    def handle_ability(player, opponent, *args):
+    def handle_ability(game_state, *args):
         pass
 
     @staticmethod
-    def handle_activation(player, opponent, *args):
+    def handle_activation(game_state, *args):
+        if not args:
+            print("Usage: activate <card_id>")
+
+        if game_state.player.hand[int(args[0])].card.type != CardType.MONSTER:
+            print("Selected card is not a monster!")
+            return (False, False)
+
+        if game_state.player.hand[int(args[0])].card.stage != StageType.BASIC:
+            print("Selected card is not a Basic monster!")
+            return (False, False)
+
+        success = game_state.player.set_active_monster(int(args[0]))
+        return (False, success) # Redraw if successful, but don't end turn
+
+    @staticmethod
+    def handle_attach(game_state, *args):
         pass
 
     @staticmethod
-    def handle_attach(player, opponent, *args):
-        pass
-
-    @staticmethod
-    def handle_attack(player, opponent, *args):
+    def handle_attack(game_state, *args):
         # TODO: Allow user to specify which attack to use
-        player.active_monster.use_attack(0, player, opponent)
+        success = game_state.player.active_monster.use_attack(0, game_state.player, game_state.opponent)
+        if success:
+            print(f"{game_state.player.title}'s turn has ended.")
+        # Return the success status to determine if the turn ends
+        return (success, True) # End turn and redraw if successful
 
     @staticmethod
-    def handle_bench(player, opponent, *args):
-        hand_string = TerminalView.get_hand_list_string(player)
+    def handle_bench(game_state, *args):
+        hand_string = TerminalView.get_hand_list_string(game_state.player)
         print(hand_string)
         index = input("Select card to bench by displayed ID. ")
         try:
-            player.add_to_bench(int(index))
+            success = game_state.player.add_to_bench(int(index))
+            return (False, success) # Redraw if successful, but don't end turn
         except KeyError:
             print(f"Invalid index: {index}")
-            return
+            return (False, False)
         except ValueError:
             print(f"Invalid index: {index}")
-            return
+            return (False, False)
 
     @staticmethod
-    def handle_evolve(player, opponent, *args):
+    def handle_evolve(game_state, *args):
         pass
 
     @staticmethod
-    def handle_exit(player, opponent, *args):
+    def handle_exit(game_state, *args):
         print("Exiting 'cards' program.")
         os._exit(1)
 
     @staticmethod
-    def handle_mana(player, opponent, *args):
+    def handle_mana(game_state, *args):
         if not args:
             print("Usage: mana <type> [quantity]")
-            return
+            return (False, False)
 
         mana_type = args[0]
         qty = 1
@@ -58,24 +76,26 @@ class CommandHandler:
                 qty = int(args[1])
             except ValueError:
                 print(f"Invalid quantity: {args[1]}")
-                return
+                return (False, False)
 
-        player.add_mana(player.active_monster, mana_type, qty)
+        success = game_state.player.add_mana(game_state.player.active_monster, mana_type, qty)
+        return (False, success) # Redraw if successful, but don't end turn
 
     @staticmethod
-    def handle_show(player, opponent, *args):
+    def handle_show(game_state, *args):
         if args and args[0] == "hand":
-            hand_string = TerminalView.get_hand_list_string(player)
+            hand_string = TerminalView.get_hand_list_string(game_state.player)
             print(hand_string)
         else:
             print("Usage: show hand")
+        return (False, False)
 
     @staticmethod
-    def handle_retreat(player, opponent, *args):
+    def handle_retreat(game_state, *args):
         pass
 
     @staticmethod
-    def handle_utility(player, opponent, *args):
+    def handle_utility(game_state, *args):
         pass
 
     COMMANDS = {
