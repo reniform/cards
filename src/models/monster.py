@@ -47,6 +47,8 @@ class MonsterCard(CardTemplate):
     def __init__(self, card):
         super().__init__()
         self.card = card
+        self.id = card.id
+        self.title = card.title
         self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
 

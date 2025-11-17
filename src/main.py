@@ -6,6 +6,30 @@ from models.monster import MonsterTemplate, MonsterCard
 from models.utility import UtilityTemplate, UtilityCard
 from models.mana import ManaTemplate, ManaCard
 
+import colorlog
+import logging
+logger = logging.getLogger(__name__)
+
+def setup_logging():
+    """
+    Configures a colored logger for the application.
+    """
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        '%(log_color)s%(levelname)-8s %(purple)s[%(name)s]%(reset)s %(blue)s%(message)s',
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'bold_red,bg_white',
+        }
+    )
+    handler.setFormatter(formatter)
+    root_logger = logging.getLogger()
+    root_logger.addHandler(handler)
+    root_logger.setLevel(logging.INFO)
+
 def generate_deck_from_list(deck_list, player_unit):
     """
     Populates a player's card field from a list of card data dictionaries.
@@ -26,6 +50,8 @@ def main():
     """
     Main entry point for the application. Sets up the game and starts the engine.
     """
+    setup_logging()
+    logger.info('Starting cards!')
     # 1. Create players
     player = PlayerUnit()
     opponent = PlayerUnit('Opponent')

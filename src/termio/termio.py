@@ -1,5 +1,6 @@
 import os
 from core.enums import CardType, StageType
+from core.carddata import give_test_card
 from termio.view import TerminalView
 
 
@@ -19,17 +20,17 @@ class CommandHandler:
         """
         if not args:
             print("Usage: activate <card_id>")
-
-        if game_state.player.hand[int(args[0])].card.type != CardType.MONSTER:
-            print("Selected card is not a monster!")
             return (False, False)
-
-        if game_state.player.hand[int(args[0])].card.stage != StageType.BASIC:
-            print("Selected card is not a Basic monster!")
+        
+        try:
+            card_id = int(args[0])
+            success = game_state.player.set_active_monster(card_id)
+            if not success:
+                print("Could not activate monster. Check logs for details.")
+            return (False, success) # Redraw if successful, but don't end turn
+        except (ValueError, KeyError):
+            print(f"Invalid card ID: {args[0]}")
             return (False, False)
-
-        success = game_state.player.set_active_monster(int(args[0]))
-        return (False, success) # Redraw if successful, but don't end turn
 
     @staticmethod
     def handle_attach(game_state, *args):
@@ -94,6 +95,40 @@ class CommandHandler:
         else:
             print("Usage: show hand")
         return (False, False)
+    
+    @staticmethod
+    def handle_reset(game_state, *args) -> bool | bool:
+        """
+        Resets the entire game state for testing.
+        """
+        print("Resetting game state...")
+        
+        # This logic is mirrored from main.py
+        game_state.player.reset()
+        game_state.opponent.reset()
+
+        from main import generate_deck_from_list # Local import to avoid circular dependency
+        generate_deck_from_list(give_test_card(100), player_unit=game_state.player)
+        generate_deck_from_list(give_test_card(100), player_unit=game_state.opponent)
+
+        # Initialize, shuffle, and draw for both players
+        game_state.player.initialize_deck()
+        game_state.player.shuffle_deck()
+        game_state.player.draw_from_deck(7)
+
+        game_state.opponent.initialize_deck()
+        game_state.opponent.shuffle_deck()
+        game_state.opponent.draw_from_deck(7)
+
+        # Pre-activating an opponent monster (test).
+        for card_id, card in game_state.opponent.hand.items():
+            if card.card.type == CardType.MONSTER:
+                game_state.opponent.set_active_monster(card_id)
+                # This break ensures we only activate the first monster found.
+                break
+
+        print("Game has been reset.")
+        return (False, True) # Redraw the screen    
 
     @staticmethod
     def handle_retreat(game_state, *args):
@@ -113,6 +148,7 @@ class CommandHandler:
         "exit": handle_exit,
         "mana": handle_mana,
         "show": handle_show,
+        "reset": handle_reset,
         "retreat": handle_retreat,
         "utility": handle_utility,
     }

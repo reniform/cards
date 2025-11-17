@@ -1,7 +1,9 @@
 import random
 from models.monster import MonsterCard
-from core.enums import ManaType, CardType
+from core.enums import ManaType, CardType, StageType
 
+import logging
+logger = logging.getLogger(__name__)
 
 class PlayerUnit:
     """
@@ -167,7 +169,7 @@ class PlayerUnit:
         """
         # Check against limit on amount of bench cards
         if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
-            print("Too many cards in bench!")
+            logger.warning("Too many cards in bench!")
             return False
 
         # Perform the bench operation:
@@ -199,10 +201,27 @@ class PlayerUnit:
         :param card_id: The card ID of the card to be set as the active monster.
         :return: `True` if the card was successfully set as the active monster; `False` otherwise.
         """
-        if self.hand[card_id].card.type != CardType.MONSTER:
+        if self.active_monster:
+            logger.warning("Active monster already set (retreat your monster instead).")
             return False
-        self.active_monster = self.hand[card_id]
+
+        # Card must exist in hand
+        card_to_activate = self.hand.get(card_id)
+        if not card_to_activate:
+            logger.warning(f"Card with ID {card_id} not found in hand.")
+            return False
+
+        # Card must be a Basic Monster
+        if card_to_activate.card.type != CardType.MONSTER:
+            logger.warning(f"Cannot activate '{card_to_activate.title}': it is not a monster.")
+            return False
+        if card_to_activate.card.stage != StageType.BASIC:
+            logger.warning(f"Cannot activate '{card_to_activate.title}': it is not a Basic monster.")
+            return False
+
+        self.active_monster = card_to_activate
         self.remove_from_hand(card_id)
+        logger.info(f"{self.active_monster.title} is now set as active monster.")
         return True
 
     #! CHECK FOR MANA
@@ -218,12 +237,27 @@ class PlayerUnit:
         :return: `True` if the mana was successfully added; `False` otherwise.
         """
         if not isinstance(target, MonsterCard):
-            print("Target is not a monster!")
+            logger.warning("Target is not a monster!")
             return False
         try:
             mana_type = ManaType(mana_type_str.lower())
             target.mana_pool[mana_type] += qty
+            logger.info(f"{qty} {mana_type_str} added to {target.title}")
             return True
         except (KeyError, ValueError):
             # Let the caller handle the error message
             return False
+        
+    def reset(self):
+        """
+        Resets the player's state to its initial condition.
+        Clears all game zones like hand, deck, discard, etc.
+        """
+        logger.info(f"Resetting state for player: {self.title}")
+        self.field = {}
+        self.deck = {}
+        self.hand = {}
+        self.discard = {}
+        self.bench = {}
+        self.prize = {i: None for i in range(1, 7)}
+        self.active_monster = None
