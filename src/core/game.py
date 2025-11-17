@@ -31,7 +31,6 @@ class GameState:
                 # Pass the whole game state to the handler
                 turn_ended, needs_redraw = handler(self, *args)
                 if turn_ended:
-                    input("\nPress Enter to end your turn...")
                     self.next_turn()
                     self.redraw_screen()  # Redraw for the new turn.
                 elif needs_redraw:

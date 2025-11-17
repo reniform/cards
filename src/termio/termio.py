@@ -84,7 +84,7 @@ class CommandHandler:
                 return (False, False)
 
         success = game_state.player.add_mana(game_state.player.active_monster, mana_type, qty)
-        return (success, False) # Redraw if successful, but don't end turn
+        return (False, success) # Redraw if successful, but don't end turn
 
     @staticmethod
     def handle_show(game_state, *args) -> bool | bool:

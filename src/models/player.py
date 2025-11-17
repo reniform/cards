@@ -223,6 +223,7 @@ class PlayerUnit:
         try:
             mana_type = ManaType(mana_type_str.lower())
             target.mana_pool[mana_type] += qty
+            return True
         except (KeyError, ValueError):
             # Let the caller handle the error message
             return False

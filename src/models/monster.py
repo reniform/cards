@@ -61,6 +61,7 @@ class MonsterCard(CardTemplate):
         if 0 <= attack_index < len(self.card.attacks):
             attack = self.card.attacks[attack_index]
             attack.execute(player, target)
+            return True
         else:
             print(f"Invalid attack index: {attack_index}. {self.card.title} does not have an attack at that position.")
             return False
