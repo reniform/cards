@@ -1,3 +1,7 @@
+import logging
+logger = logging.getLogger(__name__)
+
+
 class CardTemplate:
     """
     Superclass for all cards, for
@@ -15,6 +19,7 @@ class CardTemplate:
 
         # Assign the next available unique ID to this card instance
         self.id = CardTemplate._next_id
+        logger.debug(f"New CardTemplate generated with id {self.id}")
 
         # Add this new card instance to the central registry.
         CardTemplate._all_cards[self.id] = self

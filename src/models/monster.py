@@ -1,6 +1,9 @@
 from core.enums import CardType, ManaType
 from core.combat import Attack
 from .card import CardTemplate
+import logging
+logger = logging.getLogger(__name__)
+
 
 class MonsterTemplate(CardTemplate):
     """
@@ -48,9 +51,12 @@ class MonsterCard(CardTemplate):
         super().__init__()
         self.card = card
         self.id = card.id
+        self.type = card.type
         self.title = card.title
         self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
+        self.attached_mana = {}
+        logger.debug(f"Initiate {self.type} card ({self.id} {self.title})")
 
     def use_attack(self, attack_index, player, target):
         """Performs attack from the given index. Attacks are listed (right now) in a list
@@ -75,6 +81,27 @@ class MonsterCard(CardTemplate):
         self.health -= damage
 
     #! MANA METHODS
+    @property
+    def total_mana(self):
+        """
+        A property that dynamically calculates the total available mana by combining
+        the temporary mana_pool with mana from attached ManaCards.
+        """
+        # Start with a copy of the temporary mana pool
+        combined_pool = self.mana_pool.copy()
+
+        # Add mana from attached cards
+        for mana_card in self.attached_mana.values():
+            mana_type = mana_card.card.mana_type
+            combined_pool[mana_type] = combined_pool.get(mana_type, 0) + 1
+        
+        return combined_pool
+
+    def add_mana_attachment(self, mana_card):
+        """Receives a ManaCard object and adds it to its attachments."""
+        self.attached_mana[mana_card.id] = mana_card
+        logger.info(f"Attached {mana_card.title} to {self.title}")
+
     def has_mana(self, cost):
         """
         Checks whether there is sufficent mana in the mana pool for performing
@@ -84,13 +111,13 @@ class MonsterCard(CardTemplate):
         """
 
         # Make a copy to not mutate original: what remains will be 
-        remaining_pool = self.mana_pool.copy()
+        remaining_pool = self.total_mana.copy()
 
         # First, pay specific mana costs. Colorless costs are handled later
         for mana_type, amount in cost.items():
             if mana_type == ManaType.COLORLESS:
                 continue
-            if self.mana_pool.get(mana_type, 0) < amount:
+            if remaining_pool.get(mana_type, 0) < amount:
                 return False
             remaining_pool[mana_type] -= amount
 
@@ -108,6 +135,11 @@ class MonsterCard(CardTemplate):
 
         :param cost: Mana quantity, expressed in a dict like `{ManaType.FIRE: 2, ...}`, to be subtracted from the monster's mana pool.
         """
+        # This method now only needs to spend from the temporary mana_pool.
+        # The check in has_mana() already confirmed that attached cards can cover the rest.
+        # We don't "spend" attached cards, they are just present.
+        # This logic correctly prioritizes spending temporary mana first.
+
         # Pay non-colorless costs first
         for mana_type, amount in cost.items():
             if mana_type == ManaType.COLORLESS:
