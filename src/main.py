@@ -28,7 +28,7 @@ def setup_logging():
     handler.setFormatter(formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(logging.DEBUG)
 
 def generate_deck_from_list(deck_list, player_unit):
     """

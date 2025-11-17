@@ -63,12 +63,13 @@ class PlayerUnit:
         Stops when the deck reaches the maximum allowed card count.
         """
         if self.deck:
-            print("Deck is already initialized.")
+            logger.warning("Deck is already initialized.")
             return
 
         for card_id, card in self.field.items():
             if len(self.deck) >= self.CONST_MAX_CARDS:
                 break
+            logger.debug(f"{card} added to deck for player {self.title}")
             self.deck[card_id] = card
 
     def shuffle_deck(self):
@@ -77,7 +78,7 @@ class PlayerUnit:
         """
         # Perform a check for an initialized deck.
         if not self.deck:
-            print("Deck is not initialized.")
+            logger.warning("Deck is not initialized.")
             return
         
         # Convert the dictionary's items to a list for shuffling.
@@ -86,6 +87,7 @@ class PlayerUnit:
 
         # Recreate the deck as a new dictionary with the shuffled order.
         self.deck = dict(deck_items)
+        logger.info(f"Deck for {self.title} is shuffled.")
 
     def remove_from_deck(self, qty):
         """
@@ -136,10 +138,12 @@ class PlayerUnit:
         """Draws a specified number of cards from the deck and adds them to the hand."""
         drawn_cards = self.remove_from_deck(qty)
         if not drawn_cards:
+            logger.warning(f"Deck for player {self.title} is empty.")
             return
         for card in drawn_cards.values():
             self.add_to_hand(card)
-
+            logger.debug(f"{card} drawn into player {self.title} hand.")
+ 
     #! DISCARD METHODS
     def add_to_discard(self, card):
         """
@@ -221,7 +225,7 @@ class PlayerUnit:
 
         self.active_monster = card_to_activate
         self.remove_from_hand(card_id)
-        logger.info(f"{self.active_monster.title} is now set as active monster.")
+        logger.info(f"{self.active_monster.title} is now set as active monster for player {self.title}")
         return True
 
     #! CHECK FOR MANA
