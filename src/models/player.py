@@ -3,69 +3,78 @@ from models.monster import MonsterCard
 from core.enums import ManaType, CardType, StageType
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class PlayerUnit:
     """
-    'PlayerUnit' holds all player data as pertains to the active player state, including:
-    played cards, cards in hand, deck cards, discard pile, and prize cards, among other states.
+    Manages the state and cards for a single player.
 
-    ## Methods
-    ### Hand-related:
-    * `add_to_hand()` TODO:
-    * `check_hand()` TODO:
-    * `remove_from_hand()` TODO:
-    ### Mana-related:
-    * `has_mana(cost)` Perform mana requirement checks for mana-expending actions
-    * `add_mana(mana_type_str, qty)` Adding mana to an overall mana count (TODO: Attach mana to monster cards)
-    * `spend_mana(cost)` Spending mana whenever a mana-expending action is performed
-    ### Action-related:
-    * `set_active_monster(card)` Set a monster to the active position.
-    * `use_attack(attack_index, target)` Perform an attack.
-    ### Debug:
-    * `print_mana_pool()` Print mana pool in the terminal debug output.
+    This class holds all of a player's card zones (deck, hand, discard, etc.)
+    and provides methods for game actions like drawing cards, playing monsters,
+    and attaching mana.
+
+    Attributes:
+        title (str): The name of the player (e.g., "Player" or "Opponent").
+        field (dict): A dictionary of all cards belonging to the player before
+            being assigned to a specific zone.
+        deck (dict): Cards currently in the player's deck.
+        hand (dict): Cards currently in the player's hand.
+        discard (dict): Cards in the player's discard pile.
+        bench (dict): Monster cards on the player's bench.
+        prize (dict): The player's prize cards.
+        active_monster (MonsterCard): The monster currently in the active spot.
     """
 
-    type = CardType.MONSTER
+    #! CONSTANTS
     CONST_MAX_CARDS = 60
     CONST_MAX_BENCH_CARDS = 5
 
     def __init__(self, title="Player"):
-        self.title = title
-        self.field = {}
-        self.deck = {}
-        self.hand = {}
-        self.discard = {}
-        self.bench = {}
-        self.prize = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None}
-        self.score = len(self.prize)
-        self.active_monster = None
+        """
+        Initializes a PlayerUnit.
+
+        Args:
+            title (str): The name of the player.
+        """
+        self.title: str = title
+        self.field: dict = {}
+        self.deck: dict = {}
+        self.hand: dict = {}
+        self.discard: dict = {}
+        self.bench: dict = {}
+        self.prize: dict = {i: None for i in range(1, 7)}
+        self.active_monster: MonsterCard = None
 
     #! FIELD METHODS
-    def add_to_field(self, card):
+    def add_to_field(self, card) -> bool:
         """
-        Adds a card to the general field. The *field* is the list of all cards in the specific player space, including the deck, the hand, the bench, etc.
-        TODO: Move max card check to the deck methods.
+        Adds a single card to the general field.
 
-        :param card: The card to be added.
-        :return: `True` if the card was successfully added; `False` otherwise.
+        The field is a collection of all cards belonging to a player before
+        they are moved into specific zones like the deck or hand. This is an
+        internal method that takes a card object.
+
+        Args:
+            card (Card): The card object to be added to the field.
+        Before cards are moved to the deck, they are held in the field.
         """
-        if len(self.field) >= self.CONST_MAX_CARDS:
-            print("Too many cards in deck!")
-            return False
         self.field[card.id] = card
         return True
-    
+
     #! DECK METHODS
     def initialize_deck(self):
         """
         Populates the deck from the player's field of cards.
         Stops when the deck reaches the maximum allowed card count.
         """
+        # Check for an already initialized deck.
         if self.deck:
             logger.warning("Deck is already initialized.")
             return
 
+        # Attach field items to deck, stopping when the maximum is reached.
         for card_id, card in self.field.items():
             if len(self.deck) >= self.CONST_MAX_CARDS:
                 break
@@ -74,13 +83,13 @@ class PlayerUnit:
 
     def shuffle_deck(self):
         """
-        Performs a shuffle of the deck using random.
+        Performs a shuffle of the deck using `random.shuffle()`.
         """
         # Perform a check for an initialized deck.
         if not self.deck:
             logger.warning("Deck is not initialized.")
             return
-        
+
         # Convert the dictionary's items to a list for shuffling.
         deck_items = list(self.deck.items())
         random.shuffle(deck_items)
@@ -91,16 +100,22 @@ class PlayerUnit:
 
     def remove_from_deck(self, qty):
         """
-        Removes and returns a specified number of cards from the deck.
+        Removes and returns a specified number of cards from the deck (irrespective of ID).
+        Functionally, cards are removed from the tail end of the deck.
 
-        :param qty: The number of cards to be removed.
+        Args:
+            qty (int): The number of cards to be removed.
+
+        Returns:
+            dict: A dictionary containing the removed card objects.
         """
-        
+
         # Perform a check for an initialized deck.
         if not self.deck:
             print("Deck is not initialized.")
             return
 
+        # Pop cards into a dict which we return.
         popped_cards = {}
         for i in range(qty):
             if not self.deck:
@@ -114,10 +129,16 @@ class PlayerUnit:
     def add_to_hand(self, card):
         """
         Adds a card to the hand.
+        This is an internal method that takes a card object.
 
-        :param card: The card object to be added.
+        Args:
+            card (Card): The card object to be added.
+
+        Returns:
+            bool: True, as adding to the hand is always successful.
         """
         self.hand[card.id] = card
+        return True
 
     def retrieve_hand(self, card_index):
         pass
@@ -129,30 +150,49 @@ class PlayerUnit:
         """
         Removes and returns a card from the hand by its ID.
 
-        :param card_id: The card ID of the card to be removed from within the hand.
+        Args:
+            card_id (int): The ID of the card to be removed.
+
+        Returns:
+            Card: The removed card object, or None if not found.
         """
         return self.hand.pop(card_id, None)
-    
+
     #! DECK -> HAND
     def draw_from_deck(self, qty=1):
-        """Draws a specified number of cards from the deck and adds them to the hand."""
+        """
+        Draws a specified number of cards from the deck and adds them to the hand.
+
+        Args:
+            qty (int): The number of cards to draw. Defaults to 1.
+
+        Returns:
+            bool: True if the draw was successful, False otherwise.
+        """
         drawn_cards = self.remove_from_deck(qty)
+        # Check for an empty deck
         if not drawn_cards:
             logger.warning(f"Deck for player {self.title} is empty.")
-            return
+            return False
         for card in drawn_cards.values():
             self.add_to_hand(card)
             logger.debug(f"{card} drawn into player {self.title} hand.")
- 
+        return True
+
     #! DISCARD METHODS
     def add_to_discard(self, card):
         """
         Adds a card to the discard pile.
-        TODO: Why does `add_to_discard()` take a Card? Should a `src` be specified?
+        This is an internal method that takes a card object.
 
-        :param card: The card to be added. `add_to_hand()` retrieves the card's unique integer ID, by which it performs the operation.
+        Args:
+            card (Card): The card object to be discarded.
+
+        Returns:
+            bool: True, as adding to the discard pile is always successful.
         """
         self.discard[card.id] = card
+        return True
 
     def retrieve_discard(self):
         pass
@@ -166,20 +206,40 @@ class PlayerUnit:
     #! BENCH METHODS
     def add_to_bench(self, card_id):
         """
-        Adds a card to the bench **from the hand**. To my understanding, cards should move always from the hand to the bench; this is why `add_to_bench` looks from within the hand.
+        Adds a card to the bench **from the hand**. 
 
-        :param card_id: The card ID of the card to be added to the bench.
-        :return: `True` if the card was successfully added to the bench; `False` otherwise.
+        This is an external-facing method invoked by player action. It validates
+        that the chosen card is a Basic Monster before moving it.
+
+        Args:
+            card_id (int): The ID of the card in the hand to move to the bench.
         """
-        # Check against limit on amount of bench cards
+        # Check against limit on amount of benched cards
         if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
             logger.warning("Too many cards in bench!")
             return False
 
-        # Perform the bench operation:
-        card_to_bench = self.hand[card_id]
+        # Safely get the card from hand
+        card_to_bench = self.hand.get(int(card_id))
+        if not card_to_bench:
+            logger.warning(f"Card with ID {card_id} not found in hand.")
+            return False
+
+        # Card must be a Basic Monster to be placed on the bench
+        if card_to_bench.card.type != CardType.MONSTER:
+            logger.warning(
+                f"Cannot bench '{card_to_bench.title}': it is not a monster."
+            )
+            return False
+        if card_to_bench.card.stage != StageType.BASIC:
+            logger.warning(
+                f"Cannot bench '{card_to_bench.title}': it is not a Basic monster."
+            )
+            return False
+
         self.bench[card_id] = card_to_bench
         self.remove_from_hand(card_id)
+        logger.info(f"Benched {card_to_bench.title} for player {self.title}")
         return True
 
     def retrieve_bench(self):
@@ -192,8 +252,11 @@ class PlayerUnit:
         """
         Removes and returns a card from the bench by its ID.
 
-        :param card_id: The card ID of the card to be removed from within the bench.
-        :return: The removed card through `pop()`.
+        Args:
+            card_id (int): The ID of the card to remove.
+
+        Returns:
+            Card: The removed card object, or None if not found.
         """
         return self.bench.pop(card_id, None)
 
@@ -201,9 +264,14 @@ class PlayerUnit:
     def set_active_monster(self, card_id):
         """
         Sets the active monster in the player's `active_monster` variable. The active monster is the chief actor in the player space, and is called upon to perform actions.
+        This is an external-facing method that validates the chosen card is a
+        Basic Monster from the hand.
 
-        :param card_id: The card ID of the card to be set as the active monster.
-        :return: `True` if the card was successfully set as the active monster; `False` otherwise.
+        Args:
+            card_id (int): The ID of the card in hand to set as active.
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
         if self.active_monster:
             logger.warning("Active monster already set (retreat your monster instead).")
@@ -217,28 +285,37 @@ class PlayerUnit:
 
         # Card must be a Basic Monster
         if card_to_activate.card.type != CardType.MONSTER:
-            logger.warning(f"Cannot activate '{card_to_activate.title}': it is not a monster.")
+            logger.warning(
+                f"Cannot activate '{card_to_activate.title}': it is not a monster."
+            )
             return False
         if card_to_activate.card.stage != StageType.BASIC:
-            logger.warning(f"Cannot activate '{card_to_activate.title}': it is not a Basic monster.")
+            logger.warning(
+                f"Cannot activate '{card_to_activate.title}': it is not a Basic monster."
+            )
             return False
 
+        # Move the card from the hand to the active space
         self.active_monster = card_to_activate
         self.remove_from_hand(card_id)
-        logger.info(f"{self.active_monster.title} is now set as active monster for player {self.title}")
+        logger.info(
+            f"{self.active_monster.title} is now set as active monster for player {self.title}"
+        )
         return True
 
     #! CHECK FOR MANA
 
     def add_mana(self, target, mana_type_str, qty=1):
         """
-        Adds mana of a specific type to the active monster, and catches an exception if an invalid mana type is typed.
-        The captured exception should be handled by the caller.
+        Adds temporary mana to a monster's mana_pool.
 
-        :param target: The target card upon which the mana will be added. A check is performed to see whether the target card is a monster.
-        :param mana_type_str: String of the mana type, checked against the `ManaType` enum.
-        :param qty: The amount of mana to be added; by default, 1.
-        :return: `True` if the mana was successfully added; `False` otherwise.
+        This is a test/debug method. The primary way to add mana should be
+        by attaching ManaCards.
+
+        Args:
+            target (MonsterCard): The monster to add mana to.
+            mana_type_str (str): The string representation of the mana type (e.g., "fire").
+            qty (int): The amount of mana to add. Defaults to 1.
         """
         if not isinstance(target, MonsterCard):
             logger.warning("Target is not a monster!")
@@ -251,7 +328,38 @@ class PlayerUnit:
         except (KeyError, ValueError):
             # Let the caller handle the error message
             return False
-        
+
+    def attach_mana(self, mana_card_id, target_monster_id):
+        """
+        Attaches a `ManaCard` from the hand to a target `MonsterCard` (active or bench).
+        This is an external-facing method for a player action.
+
+        Args:
+            mana_card_id (int): The ID of the `ManaCard` in the player's hand.
+            target_monster_id (int): The ID of the target `MonsterCard`.
+        """
+        # 1. Validate and retrieve the mana card from hand
+        mana_card = self.hand.get(mana_card_id)
+        if not mana_card or mana_card.card.type != CardType.MANA:
+            logger.warning(f"Card ID {mana_card_id} is not a valid ManaCard in hand.")
+            return False
+
+        # Find the target monster (check active first, then bench)
+        target_monster = None
+        if self.active_monster and self.active_monster.id == target_monster_id:
+            target_monster = self.active_monster
+        else:
+            target_monster = self.bench.get(target_monster_id)
+
+        if not target_monster:
+            logger.warning(f"Target monster with ID {target_monster_id} not found.")
+            return False
+
+        # Perform the move
+        self.remove_from_hand(mana_card_id)
+        target_monster.add_mana_attachment(mana_card)
+        return True
+
     def reset(self):
         """
         Resets the player's state to its initial condition.
