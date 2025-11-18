@@ -165,9 +165,9 @@ class TerminalView:
         if not player.active_monster:
             return "No active monster."
         
-        header = f"{TCol.HEADER}{TCol.BOLD if bold else ''}{player.active_monster.card.title} {player.active_monster.card.id} \t\tHP {player.active_monster.health}{TCol.ENDC}"
+        #header = f"{TCol.HEADER}{TCol.BOLD if bold else ''}{player.active_monster.card.title} {player.active_monster.card.id} \t\tHP {player.active_monster.health}{TCol.ENDC}"
         mana_pool = TerminalView.get_mana_pool_string(player.active_monster)
-        return f"{header}\t{mana_pool}"
+        return f"header\t{mana_pool}"
 
     @staticmethod
     def get_hand_list_string(player: PlayerUnit) -> str:
