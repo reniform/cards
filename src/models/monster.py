@@ -8,12 +8,27 @@ logger = logging.getLogger(__name__)
 
 class MonsterTemplate(CardTemplate):
     """
-    Immutable instance and static data source for monster cards. Holds the following values:
-    ### Basic metadata
-    * `title`: Monster name.
-    * `health`: Hit points for the monster; maximum health is displayed with `max_health`.
-    ### Play data
-    * `attacks`: A list of attack-like actions to be taken by the monster in play. They are of type `Attack`, and may be chained with effects.
+    Immutable instance and static data source for monster cards.
+
+    Attributes:
+        type (CardType): `MonsterCards` are all type `MONSTER`.
+        id (int): A card's unique ID is created during instantiation at `__init__()`.
+        title (str): Necessary. The name of the monster.
+        stage (StageType): Necessary. The monster's stage (basic, stage 1, stage 2, mega/ex/etc).
+        mana_type (ManaType): Necessary. The mana type assigned to the monster.
+        evolve_to (str): Necessary. The monster from which this current monster evolves from.
+        evolve_from (str): Necessary. The monster to which this current monster evolves from.
+        health (int): Necessary. Base value for the monster's health.
+        weak_type (ManaType): Necessary. The mana type to which the monster is weak to.
+        weak_mult (int): Necessary. The value by which weakness is multiplied.
+        resist_type (ManaType): Necessary. The mana type to which the monster is resistant to.
+        resist_val (int): Necessary. The value by which resistance is multiplied.
+        retreat_val (int): Necessary. The monster's retreat cost.
+        attacks (list): Necessary. A list of attacks, each their own dictionary. 
+        abilities (list): Optional. A list of abilities, each their own dictionary.
+        level (int): Optional. The monster's level as printed on the card.
+        dex_data (dict): A dictionary of monster information received by the metadata handler as printed on the card.
+        print_data (dict): A dictionary of print run informaiton received by the metadata handler as printed on the card.
     """
     type = CardType.MONSTER
     id = None
@@ -45,15 +60,27 @@ class MonsterTemplate(CardTemplate):
 
 class MonsterCard(CardTemplate):
     """
-    Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.
+    Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.\n
+    A `MonsterCard` composes its classes through the data stored in a `MonsterTemplate` card. 
+    The`MonsterTemplate`s pull their card data, such as name, stage level, attacks, ability, 
+    and data, from dicts, and hold them for `MonsterCard` to access. The way a `MonsterCard` 
+    accesses its parent's data is by pulling it from their `card` attribute (i.e., `card.id`. 
+    `card.mana_type`, `card_retreat_val`.)
+
+    Attributes:
+        card (MonsterTemplate): The card template that `MonsterCard`s refer to as a data source.
+        health (int): The monster's live health, nominally expressed in multiples of 10.
+        mana_pool (dict): Deprecated.
+        attached_mana (dict): A container for attached mana cards, sorted by mana type.
+        abilities (list): A list of abilities, drawn from the card template's ability data.
     """
 
     def __init__(self, card):
         super().__init__()
         self.card = card
-        self.id = card.id
-        self.type = card.type
-        self.title = card.title
+        #self.id = card.id
+        #self.type = card.type
+        #self.title = card.title
         self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
         self.attached_mana = {}
@@ -63,7 +90,7 @@ class MonsterCard(CardTemplate):
             for ability_data in (self.card.abilities or [])
             if EffectRegistry.create_effect(ability_data) is not None
         ]
-        logger.debug(f"Initiate {self.type} card ({self.id} {self.title})")
+        logger.debug(f"Initiate {self.card.type} card ({self.card.id} {self.card.title})")
 
     def use_attack(self, attack_index, player, target):
         """Performs attack from the given index. Attacks are listed (right now) in a list
