@@ -1,3 +1,4 @@
+from effects.effects import EffectRegistry
 from core.enums import CardType, ManaType
 from core.combat import Attack
 from .card import CardTemplate
@@ -37,10 +38,10 @@ class MonsterTemplate(CardTemplate):
         self.attacks        = [Attack(**atk_data) for atk_data in kwargs['attacks']]
 
         # Perform insubstantiation to optional fields from kwargs.
-        self.abilities      = kwargs['abilities']       # list: Ability
-        self.level          = kwargs['level']           # int
-        self.dex_data       = kwargs['dex_data']        # dict: JSON-esque
-        self.print_data     = kwargs['print_data']      # dict: JSON-esque
+        self.abilities      = kwargs.get('abilities', []) # list: Ability
+        self.level          = kwargs.get('level')           # int
+        self.dex_data       = kwargs.get('dex_data', {})    # dict: JSON-esque
+        self.print_data     = kwargs.get('print_data', {})  # dict: JSON-esque
 
 class MonsterCard(CardTemplate):
     """
@@ -56,6 +57,12 @@ class MonsterCard(CardTemplate):
         self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
         self.attached_mana = {}
+        # Parse abilities into Effect instances
+        self.abilities = [
+            EffectRegistry.create_effect(ability_data)
+            for ability_data in (self.card.abilities or [])
+            if EffectRegistry.create_effect(ability_data) is not None
+        ]
         logger.debug(f"Initiate {self.type} card ({self.id} {self.title})")
 
     def use_attack(self, attack_index, player, target):

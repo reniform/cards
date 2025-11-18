@@ -303,8 +303,7 @@ class PlayerUnit:
         )
         return True
 
-    #! CHECK FOR MANA
-
+    #! MANA METHODS
     def add_mana(self, target, mana_type_str, qty=1):
         """
         Adds temporary mana to a monster's mana_pool.
@@ -359,7 +358,38 @@ class PlayerUnit:
         self.remove_from_hand(mana_card_id)
         target_monster.add_mana_attachment(mana_card)
         return True
+    
+    #! UTILITY METHODS
+    def use_utility_card(self, card_id, game_state):
+        utility_card = self.hand.get(card_id)
+        if not utility_card or utility_card.card.type != CardType.UTILITY:
+            logger.warning(f"Card ID {card_id} is not a valid UtilityCard in hand.")
+            return False
+        
+        effects_to_execute = self._get_card_effects(utility_card)
 
+        for effect in effects_to_execute:
+            # Pass the necessary context to the effect
+            effect.execute(game_state, utility_card, self)
+
+        self.remove_from_hand(card_id)
+        self.add_to_discard(utility_card)
+        logger.info(f"Player {self.title} used {utility_card.title}.")
+        return True
+
+    
+    def _get_card_effects(self, card):
+        """Extract relevant effects"""
+
+        # Utility cards: just return their effects
+        if card.card.type == CardType.UTILITY:
+            return card.effects
+        
+        # Monster cards: depends... (codify later)
+        elif card.type == CardType.MONSTER:
+            return card.effects
+    
+    #! OTHER METHODS
     def reset(self):
         """
         Resets the player's state to its initial condition.

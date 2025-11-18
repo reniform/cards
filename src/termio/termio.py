@@ -136,7 +136,35 @@ class CommandHandler:
 
     @staticmethod
     def handle_utility(game_state, *args):
-        pass
+        """
+        Handles the 'use' command for playing a utility card from the hand.
+
+        :return: A tuple of `False` (not a turn-ending action) and `True` (action completed successfully.)
+        """
+        if not args:
+            print("Usage: use <card_id_from_hand>")
+            return (False, False)
+        
+        # Validate card ID.
+        try:
+            card_id_to_use = int(args[0])
+        except ValueError:
+            print(f"Invalid card ID: {args[0]}. Please provide a number.")
+            return (False, False)
+
+        card_in_hand = game_state.player.hand.get(card_id_to_use)
+
+        if not card_in_hand:
+            print(f"Card with ID {card_id_to_use} not found in your hand.")
+            return (False, False)
+        
+        if card_in_hand.card.type != CardType.UTILITY:
+            print(f"Card '{card_in_hand.title}' is not a utility card.")
+            return (False, False)
+        
+        success = game_state.player.use_utility_card(card_id_to_use, game_state)
+        return (False, success)
+
 
     COMMANDS = {
         "ability": handle_ability,
@@ -150,5 +178,5 @@ class CommandHandler:
         "show": handle_show,
         "reset": handle_reset,
         "retreat": handle_retreat,
-        "utility": handle_utility,
+        "use": handle_utility, # alias 
     }

@@ -8,6 +8,33 @@ class GameState:
         self.player = player
         self.opponent = opponent
         self.turn_count = 1
+        self.active_payer = player
+        self.current_phase = "draw"
+
+    def can_draw(self, player):
+        """Check if the player can draw."""
+        return len(player.deck) > 0
+
+    def next_turn(self):
+        """
+        Handles all end-of-turn and start-of-turn logic.
+        """
+        # Swap player and opponent
+        # self.player, self.opponent = self.opponent, self.player
+        self.turn_count += 1
+        # Check for empty deck to prevent trouble
+        if self.can_draw(self.player):
+            self.player.draw_from_deck(1)
+
+    def redraw_screen(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f'\n== {cf.bold} Turn [{self.turn_count}] {cf.reset} ======================================================================')
+        print(TerminalView.print_player_data(self.opponent, opposite=True))
+        print(TerminalView.print_active_monster(self.opponent))
+        print(TerminalView.print_active_monster(self.player, Bold=True))
+        print(TerminalView.print_player_data(self.player))
+        print(TerminalView.print_hand(self.player))
+        print(TerminalView.print_prompt(self.player))
 
     def run(self):
         """
@@ -43,23 +70,3 @@ class GameState:
             if self.opponent.active_monster and self.opponent.active_monster.health <= 0:
                 print("You win!")
                 os._exit(1)
-
-    def next_turn(self):
-        """
-        Handles all end-of-turn and start-of-turn logic.
-        """
-        # Swap player and opponent
-        # self.player, self.opponent = self.opponent, self.player
-        self.turn_count += 1
-        # TODO: Implement start-of-turn card draw
-        self.player.draw_from_deck(1)
-
-    def redraw_screen(self):
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f'\n== {cf.bold} Turn [{self.turn_count}] {cf.reset} ======================================================================')
-        print(TerminalView.print_player_data(self.opponent, opposite=True))
-        print(TerminalView.print_active_monster(self.opponent))
-        print(TerminalView.print_active_monster(self.player, Bold=True))
-        print(TerminalView.print_player_data(self.player))
-        print(TerminalView.print_hand(self.player))
-        print(TerminalView.print_prompt(self.player))
