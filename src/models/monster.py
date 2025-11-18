@@ -1,12 +1,15 @@
-from effects.effects import EffectRegistry
-from core.enums import CardType, ManaType
-from core.combat import Attack
-from .card import CardTemplate
 import logging
+
+from core.combat import Attack
+from core.enums import CardType, ManaType
+from effects.effects import EffectRegistry
+
+from .card import CardTemplate
+
 logger = logging.getLogger(__name__)
 
 
-class MonsterTemplate(CardTemplate):
+class MonsterTemplate:
     """
     Immutable instance and static data source for monster cards.
 
@@ -33,10 +36,7 @@ class MonsterTemplate(CardTemplate):
     type = CardType.MONSTER
     id = None
 
-    def __init__(self, **kwargs):
-        # Recieve CardTemplate ID
-        super().__init__()
-
+    def __init__(self, **kwargs) -> None:
         # Perform insubstantiation to necessary fields from kwargs.
         self.type           = kwargs['type']            # CardType
         self.title          = kwargs['title']           # str
@@ -63,24 +63,28 @@ class MonsterCard(CardTemplate):
     Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.\n
     A `MonsterCard` composes its classes through the data stored in a `MonsterTemplate` card. 
     The`MonsterTemplate`s pull their card data, such as name, stage level, attacks, ability, 
-    and data, from dicts, and hold them for `MonsterCard` to access. The way a `MonsterCard` 
+    and data, from dicts, and hold them for a `MonsterCard` to access. The way a `MonsterCard` 
     accesses its parent's data is by pulling it from their `card` attribute (i.e., `card.id`. 
     `card.mana_type`, `card_retreat_val`.)
 
     Attributes:
-        card (MonsterTemplate): The card template that `MonsterCard`s refer to as a data source.
+        card (MonsterTemplate): The card template that `MonsterCard`s refers to as a data source.
         health (int): The monster's live health, nominally expressed in multiples of 10.
         mana_pool (dict): Deprecated.
         attached_mana (dict): A container for attached mana cards, sorted by mana type.
         abilities (list): A list of abilities, drawn from the card template's ability data.
     """
 
-    def __init__(self, card):
+    def __init__(self, card) -> None:
+        """
+        Initializes a `MonsterCard` unit. The superclass `CardTemplate` gives the `MonsterCard` a unique ID.
+
+        Args:
+            card (MonsterTemplate): The card template that `MonsterCard` refers to as a data source.
+        """
+        # Receive unique ID from superclass
         super().__init__()
         self.card = card
-        #self.id = card.id
-        #self.type = card.type
-        #self.title = card.title
         self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}
         self.attached_mana = {}
@@ -90,15 +94,16 @@ class MonsterCard(CardTemplate):
             for ability_data in (self.card.abilities or [])
             if EffectRegistry.create_effect(ability_data) is not None
         ]
-        logger.debug(f"Initiate {self.card.type} card ({self.card.id} {self.card.title})")
+        logger.debug(f"Initiate {self.card.type} card ({self.id} {self.card.title})")
 
-    def use_attack(self, attack_index, player, target):
-        """Performs attack from the given index. Attacks are listed (right now) in a list
-        (though a dict would be better hahe).
+    def use_attack(self, attack_index, player, target) -> bool:
+        """Performs attack from the given index. Attacks take the form of dicts and are kept in a list.
+        See the `Attack` class docstring for more info on attack execution.
         
-        :param attack_index: The attack to be performed in the list.
-        :param player: The performer of the attack.
-        :param target: The target of the attack.
+        Args:
+            attack_index (int): The numeric index of the attack.
+            player (PlayerUnit): The player with the monster performing the attack.
+            target (PlayerUnit): The player with the monster receiving the attack.
         """
         if 0 <= attack_index < len(self.card.attacks):
             attack = self.card.attacks[attack_index]
@@ -108,15 +113,18 @@ class MonsterCard(CardTemplate):
             print(f"Invalid attack index: {attack_index}. {self.card.title} does not have an attack at that position.")
             return False
     
-    def take_damage(self, damage):
+    def take_damage(self, damage) -> None:
         """
         Reduces the monster's health by the given amount.
+
+        Args:
+            damage (int): The amount of damage to be taken.
         """
         self.health -= damage
 
     #! MANA METHODS
     @property
-    def total_mana(self):
+    def total_mana(self) -> dict[ManaType, int]:
         """
         A property that dynamically calculates the total available mana by combining
         the temporary mana_pool with mana from attached ManaCards.
@@ -131,10 +139,10 @@ class MonsterCard(CardTemplate):
         
         return combined_pool
 
-    def add_mana_attachment(self, mana_card):
+    def add_mana_attachment(self, mana_card) -> None:
         """Receives a ManaCard object and adds it to its attachments."""
         self.attached_mana[mana_card.id] = mana_card
-        logger.info(f"Attached {mana_card.title} to {self.title}")
+        logger.info(f"Attached {mana_card.card.title} to {self.card.title}")
 
     def has_mana(self, cost):
         """

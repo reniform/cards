@@ -1,8 +1,8 @@
-import random
-from models.monster import MonsterCard
-from core.enums import ManaType, CardType, StageType
-
 import logging
+import random
+
+from core.enums import CardType, ManaType, StageType
+from models.monster import MonsterCard
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +57,7 @@ class PlayerUnit:
         internal method that takes a card object.
 
         Args:
-            card (Card): The card object to be added to the field.
-        Before cards are moved to the deck, they are held in the field.
+            card (Card): The card object to be added to the field. Before cards are moved to the deck, they are held in the field.
         """
         self.field[card.id] = card
         return True
@@ -206,7 +205,7 @@ class PlayerUnit:
     #! BENCH METHODS
     def add_to_bench(self, card_id):
         """
-        Adds a card to the bench **from the hand**. 
+        Adds a card to the bench **from the hand**.
 
         This is an external-facing method invoked by player action. It validates
         that the chosen card is a Basic Monster before moving it.
@@ -358,14 +357,14 @@ class PlayerUnit:
         self.remove_from_hand(mana_card_id)
         target_monster.add_mana_attachment(mana_card)
         return True
-    
+
     #! UTILITY METHODS
     def use_utility_card(self, card_id, game_state):
         utility_card = self.hand.get(card_id)
         if not utility_card or utility_card.card.type != CardType.UTILITY:
             logger.warning(f"Card ID {card_id} is not a valid UtilityCard in hand.")
             return False
-        
+
         effects_to_execute = self._get_card_effects(utility_card)
 
         for effect in effects_to_execute:
@@ -377,18 +376,17 @@ class PlayerUnit:
         logger.info(f"Player {self.title} used {utility_card.title}.")
         return True
 
-    
     def _get_card_effects(self, card):
         """Extract relevant effects"""
 
         # Utility cards: just return their effects
         if card.card.type == CardType.UTILITY:
             return card.effects
-        
+
         # Monster cards: depends... (codify later)
         elif card.type == CardType.MONSTER:
             return card.effects
-    
+
     #! OTHER METHODS
     def reset(self):
         """
