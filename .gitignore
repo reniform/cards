@@ -1,4 +1,4 @@
 __pycache__/
 .vscode
 data/
-carddata.py.venv/
+. svenv/
