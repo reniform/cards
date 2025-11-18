@@ -1,0 +1,2 @@
+colorful==0.5.8
+colorlog==6.10.1
