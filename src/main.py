@@ -1,13 +1,15 @@
-from core.game import GameState
-from models.player import PlayerUnit
-from core.carddata import give_test_card
-from core.enums import CardType
-from models.monster import MonsterTemplate, MonsterCard
-from models.utility import UtilityTemplate, UtilityCard
-from models.mana import ManaTemplate, ManaCard
+import logging
 
 import colorlog
-import logging
+
+from core.carddata import give_test_card
+from core.enums import CardType
+from core.game import GameState
+from models.mana import ManaCard, ManaTemplate
+from models.monster import MonsterCard, MonsterTemplate
+from models.player import PlayerUnit
+from models.utility import UtilityCard, UtilityTemplate
+
 logger = logging.getLogger(__name__)
 
 def setup_logging():
@@ -46,7 +48,7 @@ def generate_deck_from_list(deck_list, player_unit):
                 template = ManaTemplate(**card_data)
                 player_unit.add_to_field(ManaCard(template))
 
-def main():
+def main() -> None:
     """
     Main entry point for the application. Sets up the game and starts the engine.
     """

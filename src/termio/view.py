@@ -23,11 +23,12 @@ class TerminalView:
     Handles rendering game state to the terminal.
     """
     @staticmethod
-    def get_mana_pool_string(player: PlayerUnit) -> str:
-        """Returns the player's current mana pool as a formatted string."""
+    def get_mana_pool_string(monster) -> str:
+        """Returns the monster's current mana pool as a formatted string."""
+        # Use the total_mana property which includes attached mana cards.
         pool_parts = [f"{ManaColor[k.name].value}{v}{k.value[:1].upper()}{k.value[1:2].lower()}{cf.reset}"
-                      for k, v in player.mana_pool.items() if v > 0]
-        return " ".join(pool_parts) if pool_parts else "No mana"
+                      for k, v in monster.total_mana.items() if v > 0]
+        return " ".join(pool_parts) if pool_parts else ""
 
     @staticmethod
     def print_game_header() -> str:
@@ -81,7 +82,7 @@ class TerminalView:
             case StageType.STAGETWO:
                 active_mon_stage = '2'
         # The player's active monster id, padded for space.
-        padded_id = f"{player.active_monster.card.id:03d}"
+        padded_id = f"{player.active_monster.id:03d}"
         # The player's active monster title, padded for space.
         active_mon_title = f"{player.active_monster.card.title:<12}"
         # The player's active monster health and max health.

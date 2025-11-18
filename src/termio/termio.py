@@ -32,7 +32,43 @@ class CommandHandler:
 
     @staticmethod
     def handle_attach(game_state, *args):
-        pass
+        """
+        Handles the 'attach' command to attach a mana card from hand to a monster.
+        Usage: attach <mana_card_id> to <target_monster_id>
+        """
+        # 1. Validate command structure
+        if len(args) != 3 or args[1].lower() != 'to':
+            print("Usage: attach <mana_card_id> to <target_monster_id>")
+            return (False, False)
+
+        # 2. Parse and validate IDs
+        try:
+            mana_card_id = int(args[0])
+            target_monster_id = int(args[2])
+        except ValueError:
+            print("Invalid ID. Please provide numbers for card IDs.")
+            return (False, False)
+
+        # 3. Check if the mana card is valid
+        mana_card = game_state.player.hand.get(mana_card_id)
+        if not mana_card or mana_card.card.type != CardType.MANA:
+            print(f"Card ID {mana_card_id} is not a valid mana card in your hand.")
+            return (False, False)
+
+        # 4. Check if the target monster is valid (active or benched)
+        target_monster = None
+        if game_state.player.active_monster and game_state.player.active_monster.id == target_monster_id:
+            target_monster = game_state.player.active_monster
+        else:
+            target_monster = game_state.player.bench.get(target_monster_id)
+        
+        if not target_monster:
+            print(f"Target monster with ID {target_monster_id} not found on your field.")
+            return (False, False)
+
+        # 5. Execute the action
+        success = game_state.player.attach_mana(mana_card_id, target_monster_id)
+        return (False, success) # Redraw on success, but don't end turn
 
     @staticmethod
     def handle_attack(game_state, *args) -> bool | bool:
