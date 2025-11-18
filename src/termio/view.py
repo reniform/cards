@@ -1,5 +1,5 @@
 from models.player import PlayerUnit
-from core.enums import ManaType, CardType, StageType
+from core.enums import CardType, StageType
 from enum import Enum
 from .color import TCol
 import colorful as cf
@@ -40,7 +40,7 @@ class TerminalView:
 
         # Draw the prize cards, of symbol [].
         prize_sprite = '[]'
-        score = player.score
+        score = len(player.prize)
         prize_groups = []
         # Draw the prize cards in groups of two.
         while score > 0:
