@@ -5,8 +5,6 @@ from termio.view import TerminalView
 
 
 class CommandHandler:
-    def __init__(self):
-        pass
 
     def handle_ability(game_state, *args):
         pass

@@ -299,7 +299,7 @@ class PlayerUnit:
         self.active_monster = card_to_activate
         self.remove_from_hand(card_id)
         logger.info(
-            f"{self.active_monster.title} is now set as active monster for player {self.title}"
+            f"{self.active_monster.card.title} is now set as active monster for player {self.title}"
         )
         return True
 

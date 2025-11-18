@@ -1,9 +1,9 @@
 from models.player import PlayerUnit
 from core.enums import CardType, StageType
 from enum import Enum
-from .color import TCol
 import colorful as cf
 import os
+
 
 class ManaColor(Enum):
     GRASS       = cf.forestGreen
