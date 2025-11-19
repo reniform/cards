@@ -19,13 +19,13 @@ Come back soon though :)
 
 2.  **Create and activate the virtual environment:**
     ```bash
-    python3 -m venv venv
+    python3 -m venv .venv
     source venv/bin/activate
     ```
 
 3.  **Install required dependencies:**
     ```bash
-    pip install colorlog colorful
+    pip install -r requirements.txt
     ```
 
 ## Running
