@@ -163,6 +163,32 @@ class MonsterCard(CardTemplate):
         self.attached_mana[mana_card.id] = mana_card
         logger.info(f"Attached {mana_card.card.title} to {self.card.title}")
 
+    def detach_mana_attachment(self, mana_card_id: int):
+        """Removes and returns one specific ManaCard object from its attachments."""
+        mana_card = self.attached_mana.pop(mana_card_id, None)
+        return mana_card
+
+    def discard_attached_mana(self, amount_to_discard: int) -> list:
+        """
+        Discards a specified number of attached mana cards.
+        This is typically used for paying retreat costs.
+
+        Args:
+            amount_to_discard (int): The number of mana cards to discard.
+
+        Returns:
+            list: A list of the discarded ManaCard objects.
+        """
+        discarded_cards = []
+        if amount_to_discard <= 0:
+            return discarded_cards
+
+        # Convert keys to a list to allow modification during iteration
+        attached_ids = list(self.attached_mana.keys())
+        for card_id in attached_ids[:amount_to_discard]:
+            discarded_cards.append(self.attached_mana.pop(card_id))
+        return discarded_cards
+
     def has_mana(self, cost):
         """
         Checks whether there is sufficent mana in the mana pool for performing

@@ -1,5 +1,7 @@
+from hmac import new
 import logging
 import random
+import re
 
 from core.enums import CardType, ManaType, StageType
 from models.monster import MonsterCard
@@ -282,6 +284,46 @@ class PlayerUnit:
         logger.info(
             f"{self.active_monster.card.title} is now set as active monster for player {self.title}"
         )
+        return True
+    def retreat_active_monster(self, new_active_id: int) -> bool:
+        """
+        Retreats the active monster to the bench if there is space.
+
+        Args:
+            new_active_id (int): The ID of the new active monster.
+        """
+        # Perform checks for active monster, mana value, and bench space.
+        if not self.active_monster:
+            logger.warning("No active monster to retreat.")
+            return False
+        
+        # Check if the monster has enough mana to pay the retreat cost.
+        retreat_cost = self.active_monster.card.retreat_val
+        cost_dict = {ManaType.COLORLESS: retreat_cost}
+        if not self.active_monster.has_mana(cost_dict):
+            logger.warning(f"Retreat for {self.active_monster} unavailable due to insufficient mana.")
+            return False
+
+        if len(self.bench) >= self.CONST_MAX_BENCH_CARDS:
+            logger.warning(f"Retreat for {self.active_monster} unavailable due to full bench.")
+            return False
+        
+        # Check for the new active monster
+        new_active_monster = self.remove_from_bench(new_active_id)
+        if not new_active_monster:
+            logger.warning(f"New active monster with ID {new_active_id} not found.")
+            return False
+        
+        # Pay retreat cost
+        discarded_mana = self.active_monster.discard_attached_mana(retreat_cost)
+        for card in discarded_mana:
+            self.add_to_discard(card)
+        
+        # Move the active monster to the bench
+        retreated_monster = self.active_monster
+        self.bench[self.active_monster.id] = self.active_monster
+        self.active_monster = new_active_monster
+        logger.info(f"Retreated {retreated_monster.title} for player {self.title}: {new_active_monster.title} now active.")
         return True
 
     #! MANA METHODS

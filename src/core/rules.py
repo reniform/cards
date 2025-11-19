@@ -174,6 +174,11 @@ class RulesEngine:
 
     @staticmethod
     def _get_retreat_actions(game_state, player) -> list:
+        """
+        Generates a list of legal RETREAT actions.
+        A RETREAT action is possible if a player has an active monster that
+        can pay the retreat cost and has space on the bench to retreat.
+        """
         pass
 
     @staticmethod

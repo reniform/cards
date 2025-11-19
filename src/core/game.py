@@ -44,7 +44,7 @@ class GameState:
             self.active_player.active_monster.has_attached = False
             self.active_player.active_monster.has_evolved = False
 
-        for monster in self.active_player.bench:
+        for monster in self.active_player.bench.values():
             monster.has_attacked = False
             monster.has_attached = False
             monster.has_evolved = False
