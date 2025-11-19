@@ -24,9 +24,9 @@ class GameState:
     def waiting_player(self):
         """A property to easily get the player who is not active."""
         return self.player2 if self.active_player is self.player1 else self.player1
-    
+
     def get_legal_actions(self, player):
-        return RulesEngine.get_legal_actions(self)
+        return RulesEngine.get_legal_actions(self, player)
 
     def next_turn(self) -> None:
         """
@@ -45,17 +45,19 @@ class GameState:
         for monster in self.active_player.bench:
             monster.has_attacked = False
             monster.has_attached = False
-        
+
         # The new active player draws a card.
         if len(self.active_player.deck) > 0:
             self.active_player.draw_from_deck(1)
 
     def redraw_screen(self) -> None:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        
-        print(self.legal_actions) # Keep this for debugging
+        os.system("cls" if os.name == "nt" else "clear")
 
-        print(f'\n== {cf.bold} Turn [{self.turn_count}] {cf.reset} ======================================================================')
+        print(self.legal_actions)  # Keep this for debugging
+
+        print(
+            f"\n== {cf.bold} Turn [{self.turn_count}] {cf.reset} ======================================================================"
+        )
         print(TerminalView.print_player_data(self.waiting_player, opposite=True))
         print(TerminalView.print_bench(self.waiting_player))
         print(TerminalView.print_active_monster(self.waiting_player))
@@ -72,8 +74,8 @@ class GameState:
         while True:
             # 1. Calculate all legal actions for the current state.
             self.legal_actions = self.get_legal_actions(self.active_player)
-            self.legal_action_types = {action['type'] for action in self.legal_actions}
-            
+            self.legal_action_types = {action["type"] for action in self.legal_actions}
+
             # 2. Redraw the screen with the new state.
             self.redraw_screen()
             command = input(f"[{self.active_player.title}] perform an action! ==> ")
@@ -85,7 +87,7 @@ class GameState:
             command_word = parts[0]
             args = parts[1:]
 
-            if command_word == 'debug': # Special case to break the loop
+            if command_word == "debug":  # Special case to break the loop
                 break
             elif handler := CommandHandler.COMMANDS.get(command_word):
                 # Pass the whole game state to the handler
@@ -96,8 +98,11 @@ class GameState:
 
             else:
                 print("??? What???")
-        
+
             # PERFORM CHECKS
-            if self.waiting_player.active_monster and self.waiting_player.active_monster.health <= 0:
+            if (
+                self.waiting_player.active_monster
+                and self.waiting_player.active_monster.health <= 0
+            ):
                 print("You win!")
                 os._exit(1)

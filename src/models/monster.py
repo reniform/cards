@@ -1,7 +1,7 @@
 import logging
 
 from core.combat import Attack
-from core.enums import CardType, ManaType
+from core.enums import CardType, ManaType, StageType
 from effects.effects import EffectRegistry
 
 from .card import CardTemplate
@@ -27,44 +27,50 @@ class MonsterTemplate:
         resist_type (ManaType): Necessary. The mana type to which the monster is resistant to.
         resist_val (int): Necessary. The value by which resistance is multiplied.
         retreat_val (int): Necessary. The monster's retreat cost.
-        attacks (list): Necessary. A list of attacks, each their own dictionary. 
+        attacks (list): Necessary. A list of attacks, each their own dictionary.
         abilities (list): Optional. A list of abilities, each their own dictionary.
         level (int): Optional. The monster's level as printed on the card.
         dex_data (dict): A dictionary of monster information received by the metadata handler as printed on the card.
         print_data (dict): A dictionary of print run informaiton received by the metadata handler as printed on the card.
     """
+
     type = CardType.MONSTER
     id = None
 
     def __init__(self, **kwargs) -> None:
         # Perform insubstantiation to necessary fields from kwargs.
-        self.type           = kwargs['type']            # CardType
-        self.title          = kwargs['title']           # str
-        self.stage          = kwargs['stage']           # StageType
-        self.mana_type      = kwargs['mana_type']       # ManaType
-        self.evolve_from    = kwargs['evolve_from']     # str ?
-        self.evolve_to      = kwargs['evolve_to']       # str ?
-        self.health         = kwargs['health']          # int
-        self.weak_type      = kwargs['weak_type']       # ManaType
-        self.weak_mult      = kwargs['weak_mult']       # int
-        self.resist_type    = kwargs['resist_type']     # ManaType
-        self.resist_val     = kwargs['resist_val']      # int
-        self.retreat_val    = kwargs['retreat_val']     # int
-        self.attacks        = [Attack(**atk_data) for atk_data in kwargs['attacks']]
+        self.type = kwargs["type"]  # CardType
+        self.title = kwargs["title"]  # str
+        stage_str = kwargs.get("stage")
+        self.stage = StageType(stage_str) if stage_str else None
+        mana_type_str = kwargs.get("mana_type")
+        self.mana_type = ManaType(mana_type_str) if mana_type_str else None
+        self.evolve_from = kwargs.get("evolve_from")  # str ?
+        self.evolve_to = kwargs.get("evolve_to")  # str ?
+        self.health = kwargs["health"]  # int
+        weak_type_str = kwargs.get("weak_type")
+        self.weak_type = ManaType(weak_type_str) if weak_type_str else None
+        self.weak_mult = kwargs.get("weak_mult")
+        resist_type_str = kwargs.get("resist_type")
+        self.resist_type = ManaType(resist_type_str) if resist_type_str else None
+        self.resist_val = kwargs.get("resist_val")  # int
+        self.retreat_val = kwargs.get("retreat_val")  # int
+        self.attacks = [Attack(**atk_data) for atk_data in kwargs["attacks"]]
 
         # Perform insubstantiation to optional fields from kwargs.
-        self.abilities      = kwargs.get('abilities', []) # list: Ability
-        self.level          = kwargs.get('level')           # int
-        self.dex_data       = kwargs.get('dex_data', {})    # dict: JSON-esque
-        self.print_data     = kwargs.get('print_data', {})  # dict: JSON-esque
+        self.abilities = kwargs.get("abilities", [])  # list: Ability
+        self.level = kwargs.get("level")  # int
+        self.dex_data = kwargs.get("dex_data", {})  # dict: JSON-esque
+        self.print_data = kwargs.get("print_data", {})  # dict: JSON-esque
+
 
 class MonsterCard(CardTemplate):
     """
     Active and mutable instance of a monster card, instantiated from a `MonsterTemplate`.\n
-    A `MonsterCard` composes its classes through the data stored in a `MonsterTemplate` card. 
-    The`MonsterTemplate`s pull their card data, such as name, stage level, attacks, ability, 
-    and data, from dicts, and hold them for a `MonsterCard` to access. The way a `MonsterCard` 
-    accesses its parent's data is by pulling it from their `card` attribute (i.e., `card.id`. 
+    A `MonsterCard` composes its classes through the data stored in a `MonsterTemplate` card.
+    The`MonsterTemplate`s pull their card data, such as name, stage level, attacks, ability,
+    and data, from dicts, and hold them for a `MonsterCard` to access. The way a `MonsterCard`
+    accesses its parent's data is by pulling it from their `card` attribute (i.e., `card.id`.
     `card.mana_type`, `card_retreat_val`.)
 
     Attributes:
@@ -86,8 +92,9 @@ class MonsterCard(CardTemplate):
         super().__init__()
         self.card = card
         self.health = self.card.health
-        self.mana_pool = {mana_type: 0 for mana_type in ManaType}
+        self.mana_pool = {mana_type: 0 for mana_type in ManaType}  # Deprecated
         self.attached_mana = {}
+        self.prior_evos = []
         # Parse abilities into Effect instances
         self.abilities = [
             EffectRegistry.create_effect(ability_data)
@@ -108,7 +115,7 @@ class MonsterCard(CardTemplate):
     def use_attack(self, attack_index, player, target) -> bool:
         """Performs attack from the given index. Attacks take the form of dicts and are kept in a list.
         See the `Attack` class docstring for more info on attack execution.
-        
+
         Args:
             attack_index (int): The numeric index of the attack.
             player (PlayerUnit): The player with the monster performing the attack.
@@ -119,9 +126,11 @@ class MonsterCard(CardTemplate):
             attack.execute(player, target)
             return True
         else:
-            print(f"Invalid attack index: {attack_index}. {self.card.title} does not have an attack at that position.")
+            print(
+                f"Invalid attack index: {attack_index}. {self.card.title} does not have an attack at that position."
+            )
             return False
-    
+
     def take_damage(self, damage) -> None:
         """
         Reduces the monster's health by the given amount.
@@ -145,7 +154,7 @@ class MonsterCard(CardTemplate):
         for mana_card in self.attached_mana.values():
             mana_type = mana_card.card.mana_type
             combined_pool[mana_type] = combined_pool.get(mana_type, 0) + 1
-        
+
         return combined_pool
 
     def add_mana_attachment(self, mana_card) -> None:
@@ -161,7 +170,7 @@ class MonsterCard(CardTemplate):
         :param cost: is the attack's cost—usually a dict like `{ManaType.FIRE: 2, ...}`
         """
 
-        # Make a copy to not mutate original: what remains will be 
+        # Make a copy to not mutate original: what remains will be
         remaining_pool = self.total_mana.copy()
 
         # First, pay specific mana costs. Colorless costs are handled later
@@ -177,9 +186,9 @@ class MonsterCard(CardTemplate):
             total_remaining = sum(remaining_pool.values())
             if total_remaining < cost[ManaType.COLORLESS]:
                 return False
-        
+
         return True
-    
+
     def spend_mana(self, cost):
         """
         Spends mana during the exertion of a move that costs a specific quantity of mana.
@@ -196,7 +205,7 @@ class MonsterCard(CardTemplate):
             if mana_type == ManaType.COLORLESS:
                 continue
             self.mana_pool[mana_type] -= amount
-        
+
         # Pay colorless costs
         if ManaType.COLORLESS in cost:
             colorless_needed = cost[ManaType.COLORLESS]
@@ -207,4 +216,3 @@ class MonsterCard(CardTemplate):
                 to_spend = min(available, colorless_needed)
                 self.mana_pool[mana_type] -= to_spend
                 colorless_needed -= to_spend
-        

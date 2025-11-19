@@ -12,15 +12,15 @@ class StageType(Enum):
     """
     'StageType' lists the stages in incremental order.
     """
-    BASIC       =  2
-    STAGEONE    =  3
-    STAGETWO    =  4
-    EXRS        =  5
-    EXBW        =  6
-    EXSV        =  7
-    MEGAEXXY    =  8
-    MEGAEXSV    =  9
-    TERA        = 10
+    BASIC       = 'basic'
+    STAGEONE    = 'stageone'
+    STAGETWO    = 'stagetwo'
+    EXRS        = 'exrs'
+    EXBW        = 'exbw'
+    EXSV        = 'exsv'
+    MEGAEXXY    = 'megaexxy'
+    MEGAEXSV    = 'megaexsv'
+    TERA        = 'tera'
 
 class ManaType(Enum):
     """

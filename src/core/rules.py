@@ -1,12 +1,12 @@
 import logging
 
-from src.core.enums import CardType, StageType
+from core.enums import CardType, StageType
 
 logger = logging.getLogger(__name__)
 
 class RulesEngine:
     @staticmethod
-    def get_legal_actions(self, player) -> list:
+    def get_legal_actions(game_state, player) -> list:
         """
         Constructs a list of all valid actions a player can take.
         """
@@ -20,53 +20,31 @@ class RulesEngine:
         # --- Check: Can the player ATTACK? ---
         # Player who goes first cannot attack on their first turn (turn_count == 1).
         # For target discovery, see get_valid_targets() below.
-        if self.turn_count > 1:
-            attack_actions = self._get_attack_actions(player, self.waiting_player)
+        if game_state.turn_count > 1:
+            attack_actions = RulesEngine._get_attack_actions(game_state, player)
             legal_actions.extend(attack_actions)
 
         # --- Check: Can the player ACTIVATE a monster? ---
-        activate_actions = self._get_activate_actions(player)
+        activate_actions = RulesEngine._get_activate_actions(game_state, player)
         legal_actions.extend(activate_actions)
 
         #  --- Check: Can the player ATTACH mana?
         # The rule is one mana attachment per turn.
-        attach_actions = self._get_attach_actions(player)
+        attach_actions = RulesEngine._get_attach_actions(game_state, player)
         legal_actions.extend(attach_actions)
+
+        # --- Check: Can the player EVOLVE a monster? ---
+        evolve_actions = RulesEngine._get_evolve_actions(game_state, player)
+        legal_actions.extend(evolve_actions)
 
         return legal_actions
     
-    def _get_attack_actions(self, player, opponent) -> list:
-        actions = []
-        attacker = player.active_monster
-
-        # Check if active mon exists or has attacked before
-        if attacker is None or attacker.has_attacked:
-            return actions
-        
-        # Get valid targets.
-        valid_targets = [opponent.active_monster]
-        # Later with bench sniping: valid_targets.extend(opponent.bench)
-
-        # Iterate through each attack to see if it's usable
-        for i, attack in enumerate(attacker.card.attacks):
-            # Check if the monster has enough mana for this specific attack
-            if player.active_monster.has_mana(attack.cost):
-                # If affordable, create an action for each valid target
-                for target in valid_targets:
-                    if target: # Ensure target exists
-                        actions.append({
-                            "type": "ATTACK",
-                            "payload": {
-                                "attack_name": attack.title,
-                                "attack_index": i,
-                                "target": target,
-                                "target_id": target.id
-                            }
-                        })
-                        logger.debug(f"Legal action approved: ATTACK '{attack.title}' on target {target.id} for {player.title}")
-        return actions
+    @staticmethod
+    def _get_ability_actions(game_state, player) -> list:
+        pass
     
-    def _get_activate_actions(self, player) -> list:
+    @staticmethod
+    def _get_activate_actions(game_state, player) -> list:
         """
         Generates a list of legal ACTIVATE actions.
         An ACTIVATE action is possible if the player has no active monster
@@ -87,7 +65,8 @@ class RulesEngine:
                 logger.debug(f"Legal action approved: ACTIVATE for {card.title} ({card.id})")
         return actions
 
-    def _get_attach_actions(self, player) -> list:
+    @staticmethod
+    def _get_attach_actions(game_state, player) -> list:
         """
         Generates a list of legal ATTACH actions.
         An ATTACH action is possible if the player has a monster to attach
@@ -120,3 +99,83 @@ class RulesEngine:
                     }
                 })
         return actions
+    
+    @staticmethod
+    def _get_attack_actions(game_state, player) -> list:
+        actions = []
+        attacker = player.active_monster
+        opponent = game_state.waiting_player
+
+        # Check if active mon exists or has attacked before
+        if attacker is None or attacker.has_attacked:
+            return actions
+        
+        # Get valid targets.
+        valid_targets = [opponent.active_monster]
+        # Later with bench sniping: valid_targets.extend(opponent.bench)
+
+        # Iterate through each attack to see if it's usable
+        for i, attack in enumerate(attacker.card.attacks):
+            # Check if the monster has enough mana for this specific attack
+            if player.active_monster.has_mana(attack.cost):
+                # If affordable, create an action for each valid target
+                for target in valid_targets:
+                    if target: # Ensure target exists
+                        actions.append({
+                            "type": "ATTACK",
+                            "payload": {
+                                "attack_name": attack.title,
+                                "attack_index": i,
+                                "target_id": target.id
+                            }
+                        })
+                        logger.debug(f"Legal action approved: ATTACK '{attack.title}' on target {target.id} for {player.title}")
+        return actions
+    
+    @staticmethod
+    def _get_bench_actions(game_state, player) -> list:
+        pass 
+
+    @staticmethod
+    def _get_evolve_actions(game_state, player) -> list:
+        """
+        Generates a list of legal EVOLVE actions.
+        An EVOLVE action is possible if a player has a monster in their hand
+        that can evolve from a monster they have on their field.
+        """
+        actions = []
+
+        # Find all potential evolution cards in hand (Stage 1 or 2).
+        evo_cards_in_hand = []
+        for card in player.hand.values():
+            if card.card.type == CardType.MONSTER:
+                logger.debug(f"Checking card in hand: {card.title}, Stage: {card.card.stage}")
+                if card.card.stage in [StageType.STAGEONE, StageType.STAGETWO]:
+                    evo_cards_in_hand.append(card)
+        logger.debug(f"Found potential evolution cards in hand: {evo_cards_in_hand}")
+
+        # Find all potential base monsters on the field.
+        monsters_on_field = ([player.active_monster] if player.active_monster else []) + list(player.bench.values())
+        logger.debug(f"Found monsters on field: {monsters_on_field}")
+
+        # For each combination, check if the evolution is valid.
+        for evo_card in evo_cards_in_hand:
+            for base_monster in monsters_on_field:
+                logger.debug(f"Comparing: evo_card '{evo_card.title}' (evolves from '{evo_card.card.evolve_from}') vs base_monster '{base_monster.title}'")
+                if evo_card.card.evolve_from == base_monster.title:
+                    actions.append({
+                        "type": "EVOLVE",
+                        "payload": {
+                            "evolution_card_id": evo_card.id,
+                            "base_monster_id": base_monster.id
+                        }
+                    })
+        return actions
+
+    @staticmethod
+    def _get_retreat_actions(game_state, player) -> list:
+        pass
+
+    @staticmethod
+    def _get_use_actions(game_state, player) -> list:
+        pass

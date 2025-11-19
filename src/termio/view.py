@@ -188,6 +188,7 @@ class TerminalView:
         if 'PASS' in legal_action_types: parts.append("pass")
         if 'ACTIVATE' in legal_action_types: parts.append("activate")
         if 'ATTACH' in legal_action_types: parts.append("attach")
+        if 'EVOLVE' in legal_action_types: parts.append("evolve")
         if 'ATTACK' in legal_action_types: parts.append("attack")
         # Add other commands as they become legal
         # parts.append("bench | use | retreat | etc...")

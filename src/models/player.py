@@ -1,3 +1,4 @@
+from email.mime import base
 import logging
 import random
 
@@ -139,12 +140,6 @@ class PlayerUnit:
         self.hand[card.id] = card
         return True
 
-    def retrieve_hand(self, card_index):
-        pass
-
-    def check_in_hand(self):
-        pass
-
     def remove_from_hand(self, card_id):
         """
         Removes and returns a card from the hand by its ID.
@@ -193,12 +188,6 @@ class PlayerUnit:
         self.discard[card.id] = card
         return True
 
-    def retrieve_discard(self):
-        pass
-
-    def check_in_discard(self):
-        pass
-
     def remove_from_discard(self):
         pass
 
@@ -241,13 +230,7 @@ class PlayerUnit:
         logger.info(f"Benched {card_to_bench.title} for player {self.title}")
         return True
 
-    def retrieve_bench(self):
-        pass
-
-    def check_in_bench(self):
-        pass
-
-    def remove_from_bench(self, card_id):
+    def remove_from_bench(self, card_id) -> MonsterCard:
         """
         Removes and returns a card from the bench by its ID.
 
@@ -387,6 +370,47 @@ class PlayerUnit:
         # Monster cards: depends... (codify later)
         elif card.type == CardType.MONSTER:
             return card.effects
+
+    #! EVOLVE METHODS
+    def evolve_monster(self, evo_card_id, base_card_id):
+        # Get the evolution card from the hand.
+        evo_card = self.hand.get(evo_card_id)
+        if not evo_card:
+            logger.warning(f"Evolution card with ID {evo_card_id} not found in hand.")
+            return False
+
+        # Find the base monster on the field (active or benched).
+        base_card = None
+        if self.active_monster and self.active_monster.id == base_card_id:
+            base_card = self.active_monster
+        else:
+            base_card = self.bench.get(base_card_id)
+
+        # Create the new monster.
+        new_evo_card = MonsterCard(evo_card.card)
+
+        # Transfer the battle state.
+        # damage = the base card data's base health - live card's current health
+        damage_taken = base_card.card.health - base_card.health
+        new_evo_card.health = new_evo_card.card.health - damage_taken
+        new_evo_card.attached_mana = base_card.attached_mana
+
+        # Attach the base card and its entire history to the new evo card.
+        new_evo_card.prior_evos.append(base_card)
+        new_evo_card.prior_evos.extend(base_card.prior_evos)
+
+        # Swap the cards on the field.
+        if self.active_monster and self.active_monster.id == base_card_id:
+            self.active_monster = new_evo_card
+        else:
+            # The base card must be on the bench, so replace it there.
+            del self.bench[base_card_id]
+            self.bench[new_evo_card.id] = new_evo_card
+
+        # Cleanup.
+        self.remove_from_hand(evo_card_id)
+        logger.info(f"{base_card.title} evolved into {new_evo_card.title}!")
+        return True
 
     #! OTHER METHODS
     def reset(self):
