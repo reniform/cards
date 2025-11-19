@@ -63,8 +63,32 @@ class TerminalView:
         ]
         return "  ".join(parts)
 
-    def print_bench() -> str:
-        pass
+    @staticmethod
+    def print_bench(player: PlayerUnit) -> str:
+        """Returns a formatted string of the player's benched monsters."""
+        if not player.bench:
+            return "\t(Bench is empty)"
+
+        # First, create the string for each individual monster
+        monster_strings = []
+        for monster in player.bench.values():
+            padded_id = f"{monster.id:03d}"
+            title = f"{monster.title:<12}"
+            health = f"{monster.health:3d}/{monster.card.health:3d}"
+            mana_pool = TerminalView.get_mana_pool_string(monster)
+            
+            monster_str = f"[{cf.darkSlateGray}{padded_id}{cf.reset}] {ManaColor[monster.card.mana_type.name].value}{title}{cf.reset} HP:{health} {mana_pool}"
+            monster_strings.append(monster_str)
+
+        # Now, group these strings into lines, with up to 3 monsters per line.
+        lines = []
+        for i in range(0, len(monster_strings), 3):
+            # Get a chunk of up to 3 monster strings
+            line_chunk = monster_strings[i:i + 3]
+            # Join them with a tab separator and add indentation
+            lines.append("\t  " + " \t ".join(line_chunk))
+
+        return "\n".join(lines)
 
     @staticmethod
     def print_active_monster(player, Bold=False) -> str:

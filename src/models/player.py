@@ -305,7 +305,7 @@ class PlayerUnit:
     #! MANA METHODS
     def add_mana(self, target, mana_type_str, qty=1):
         """
-        Adds temporary mana to a monster's mana_pool.
+        Adds cheat mana to a monster's mana_pool.
 
         This is a test/debug method. The primary way to add mana should be
         by attaching ManaCards.
@@ -356,6 +356,7 @@ class PlayerUnit:
         # Perform the move
         self.remove_from_hand(mana_card_id)
         target_monster.add_mana_attachment(mana_card)
+        target_monster.has_attached = True
         return True
 
     #! UTILITY METHODS
