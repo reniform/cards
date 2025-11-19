@@ -1,7 +1,5 @@
-from hmac import new
 import logging
 import random
-import re
 
 from core.enums import CardType, ManaType, StageType
 from models.monster import MonsterCard
