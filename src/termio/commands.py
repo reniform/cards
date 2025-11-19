@@ -1,5 +1,5 @@
 import os
-from core.enums import CardType, StageType
+from core.enums import CardType
 from core.carddata import give_test_card
 from core.rules import RulesEngine
 from termio.view import TerminalView
@@ -21,82 +21,62 @@ class CommandHandler:
             print("Usage: activate <card_id_from_hand>")
             return (False, False)
 
-        # 1. Check if activating is a legal action type right now.
-        if "ACTIVATE" not in game_state.legal_action_types:
-            print("You can't activate a monster right now (one is already active).")
-            return (False, False)
-
         try:
             card_id = int(args[0])
-            # 2. Check if activating THIS SPECIFIC card is a legal action.
-            is_legal = any(
-                action["payload"]["card_id"] == card_id
-                for action in game_state.legal_actions
-                if action["type"] == "ACTIVATE"
-            )
-            if not is_legal:
-                print(
-                    f"Card ID {card_id} is not a valid monster to activate from your hand."
-                )
-                return (False, False)
-
-            success = game_state.active_player.set_active_monster(card_id)
-            if not success:
-                print("Could not activate monster. Check logs for details.")
-            return (False, success)  # Redraw if successful, but don't end turn
-        except (ValueError, KeyError):
+        except ValueError:
             print(f"Invalid card ID: {args[0]}")
             return (False, False)
+
+        # 1. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_activate_action(
+            game_state, game_state.active_player, card_id
+        )
+        if not is_legal:
+            logger.warning(
+                f"ACTIVATE failed for {game_state.active_player.title}: {reason}"
+            )
+            return (False, False)
+
+        # 2. Execute the action.
+        success = game_state.active_player.set_active_monster(card_id)
+        return (False, success)  # Redraw if successful, but don't end turn
 
     @staticmethod
     def handle_attach(game_state, *args):
         """
         Handles the 'attach' command to attach a mana card from hand to a monster.
         Usage: attach <mana_card_id> [to <target_monster_id>]
+        If no target is specified, it defaults to the active monster.
         """
-        # 1. Check if attaching is a legal action type right now.
-        if "ATTACH" not in game_state.legal_action_types:
-            print("You can't attach a mana card right now.")
-            return (False, False)
-
-        # 1. Validate command structure and parse IDs
-        if len(args) == 1:
-            # Default to active monster if only one argument is given
-            if not game_state.active_player.active_monster:
-                print("No active monster. Please specify a target: attach <id> to <id>")
-                return (False, False)
-            try:
-                mana_card_id = int(args[0])
-                target_monster_id = game_state.active_player.active_monster.id
-            except ValueError:
-                print("Invalid ID. Please provide a number for the mana card ID.")
-                return (False, False)
-        elif len(args) == 3 and args[1].lower() == "to":
-            # Handle explicit target
-            try:
-                mana_card_id = int(args[0])
-                target_monster_id = int(args[2])
-            except ValueError:
-                print("Invalid ID. Please provide numbers for card IDs.")
-                return (False, False)
-        else:
+        # 1. Parse arguments.
+        if not args:
             print("Usage: attach <mana_card_id> [to <target_monster_id>]")
             return (False, False)
 
-        # 2. Check if this specific attachment is a legal action.
-        is_legal = any(
-            action["payload"]["mana_card_id"] == mana_card_id
-            and action["payload"]["target_monster_id"] == target_monster_id
-            for action in game_state.legal_actions
-            if action["type"] == "ATTACH"
+        try:
+            mana_card_id = int(args[0])
+            target_monster_id = None
+
+            if len(args) >= 3 and args[1].lower() == "to":
+                target_monster_id = int(args[2])
+            elif game_state.active_player.active_monster:
+                target_monster_id = game_state.active_player.active_monster.id
+
+        except (ValueError, IndexError):
+            print("Invalid command format. Usage: attach <mana_card_id> [to <target_monster_id>]")
+            return (False, False)
+
+        # 2. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_attach_action(
+            game_state, game_state.active_player, mana_card_id, target_monster_id
         )
         if not is_legal:
-            print(
-                f"Attaching mana card {mana_card_id} to monster {target_monster_id} is not a legal move right now."
+            logger.warning(
+                f"ATTACH failed for {game_state.active_player.title}: {reason}"
             )
             return (False, False)
 
-        # 3. Execute the action
+        # 3. Execute the action.
         success = game_state.active_player.attach_mana(mana_card_id, target_monster_id)
         return (False, success)  # Redraw on success, but don't end turn
 
@@ -130,7 +110,7 @@ class CommandHandler:
         # 2. Validate the action with the RulesEngine.
         is_legal, reason = RulesEngine._validate_attack_action(game_state, game_state.active_player, attack_index, target_id)
         if not is_legal:
-            logger.warning(f"ATTACK failed: {reason}") # Print the specific reason for failure.
+            logger.warning(f"ATTACK failed {game_state.active_player.title}: {reason}") # Print the specific reason for failure.
             return (False, False)
 
         # 3. Execute the attack.
@@ -154,11 +134,23 @@ class CommandHandler:
 
         try:
             card_id = int(args[0])
-            success = game_state.active_player.add_to_bench(card_id)
-            return (False, success)  # Redraw if successful, but don't end turn
         except ValueError:
             print(f"Invalid card ID: {args[0]}")
             return (False, False)
+
+        # 1. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_bench_action(
+            game_state, game_state.active_player, card_id
+        )
+        if not is_legal:
+            logger.warning(
+                f"BENCH failed for {game_state.active_player.title}: {reason}"
+            )
+            return (False, False)
+
+        # 2. Execute the action.
+        success = game_state.active_player.add_to_bench(card_id)
+        return (False, success)  # Redraw if successful, but don't end turn
 
     @staticmethod
     def handle_evolve(game_state, *args):
@@ -166,17 +158,12 @@ class CommandHandler:
         Handles the 'evolve' command.
         Usage: evolve <base_monster_id> to <evolution_card_id>
         """
-        # 1. Check if evolving is a legal action type.
-        if "EVOLVE" not in game_state.legal_action_types:
-            print("You have no valid evolutions at this time.")
-            return (False, False)
-
-        # 2. Validate command structure.
+        # 1. Validate command structure.
         if len(args) != 3 or args[1].lower() != "to":
             print("Usage: evolve <base_monster_id> to <evolution_card_id>")
             return (False, False)
 
-        # 3. Parse and validate IDs.
+        # 2. Parse IDs.
         try:
             base_monster_id = int(args[0])
             evo_card_id = int(args[2])
@@ -184,20 +171,17 @@ class CommandHandler:
             print("Invalid ID. Please provide numbers for card IDs.")
             return (False, False)
 
-        # 4. Check if this specific evolution is a legal action.
-        is_legal = any(
-            action["payload"]["base_monster_id"] == base_monster_id
-            and action["payload"]["evolution_card_id"] == evo_card_id
-            for action in game_state.legal_actions
-            if action["type"] == "EVOLVE"
+        # 3. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_evolve_action(
+            game_state, game_state.active_player, evo_card_id, base_monster_id
         )
         if not is_legal:
-            print(
-                f"Evolving monster {base_monster_id} into {evo_card_id} is not a legal move."
+            logger.warning(
+                f"EVOLVE failed for {game_state.active_player.title}: {reason}"
             )
             return (False, False)
 
-        # 5. Execute the action.
+        # 4. Execute the action.
         success = game_state.active_player.evolve_monster(evo_card_id, base_monster_id)
         return (False, success)  # Redraw on success, but don't end turn
 

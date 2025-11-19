@@ -54,7 +54,7 @@ class GameState:
             self.active_player.draw_from_deck(1)
 
     def redraw_screen(self) -> None:
-        os.system("cls" if os.name == "nt" else "clear")
+        # os.system("cls" if os.name == "nt" else "clear")
 
         print(self.legal_actions)  # Keep this for debugging
 
