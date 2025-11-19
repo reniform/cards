@@ -409,6 +409,7 @@ class PlayerUnit:
 
         # Cleanup.
         self.remove_from_hand(evo_card_id)
+        new_evo_card.has_evolved = True
         logger.info(f"{base_card.title} evolved into {new_evo_card.title}!")
         return True
 

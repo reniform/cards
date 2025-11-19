@@ -106,6 +106,7 @@ class MonsterCard(CardTemplate):
         #! STATE FLAGS
         self.has_attacked = False
         self.has_attached = False
+        self.has_evolved = False
 
     @property
     def title(self):

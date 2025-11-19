@@ -42,9 +42,12 @@ class GameState:
         if self.active_player.active_monster:
             self.active_player.active_monster.has_attacked = False
             self.active_player.active_monster.has_attached = False
+            self.active_player.active_monster.has_evolved = False
+
         for monster in self.active_player.bench:
             monster.has_attacked = False
             monster.has_attached = False
+            monster.has_evolved = False
 
         # The new active player draws a card.
         if len(self.active_player.deck) > 0:
