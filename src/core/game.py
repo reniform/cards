@@ -4,7 +4,7 @@ import os
 import colorful as cf
 
 from core.rules import RulesEngine
-from termio.termio import CommandHandler
+from termio.commands import CommandHandler
 from termio.view import TerminalView
 
 logger = logging.getLogger(__name__)
