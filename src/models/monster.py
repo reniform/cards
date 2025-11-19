@@ -96,6 +96,9 @@ class MonsterCard(CardTemplate):
         ]
         logger.debug(f"Initiate {self.card.type} card ({self.id} {self.card.title})")
 
+        #! STATE FLAGS
+        self.has_attacked = False
+
     def use_attack(self, attack_index, player, target) -> bool:
         """Performs attack from the given index. Attacks take the form of dicts and are kept in a list.
         See the `Attack` class docstring for more info on attack execution.

@@ -373,7 +373,7 @@ class PlayerUnit:
 
         self.remove_from_hand(card_id)
         self.add_to_discard(utility_card)
-        logger.info(f"Player {self.title} used {utility_card.title}.")
+        logger.info(f"Player {self.title} used {utility_card.card.title}.")
         return True
 
     def _get_card_effects(self, card):

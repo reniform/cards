@@ -22,7 +22,7 @@ class CommandHandler:
         
         try:
             card_id = int(args[0])
-            success = game_state.player.set_active_monster(card_id)
+            success = game_state.active_player.set_active_monster(card_id)
             if not success:
                 print("Could not activate monster. Check logs for details.")
             return (False, success) # Redraw if successful, but don't end turn
@@ -50,42 +50,42 @@ class CommandHandler:
             return (False, False)
 
         # 3. Check if the mana card is valid
-        mana_card = game_state.player.hand.get(mana_card_id)
+        mana_card = game_state.active_player.hand.get(mana_card_id)
         if not mana_card or mana_card.card.type != CardType.MANA:
             print(f"Card ID {mana_card_id} is not a valid mana card in your hand.")
             return (False, False)
 
         # 4. Check if the target monster is valid (active or benched)
         target_monster = None
-        if game_state.player.active_monster and game_state.player.active_monster.id == target_monster_id:
-            target_monster = game_state.player.active_monster
+        if game_state.active_player.active_monster and game_state.active_player.active_monster.id == target_monster_id:
+            target_monster = game_state.active_player.active_monster
         else:
-            target_monster = game_state.player.bench.get(target_monster_id)
+            target_monster = game_state.active_player.bench.get(target_monster_id)
         
         if not target_monster:
             print(f"Target monster with ID {target_monster_id} not found on your field.")
             return (False, False)
 
         # 5. Execute the action
-        success = game_state.player.attach_mana(mana_card_id, target_monster_id)
+        success = game_state.active_player.attach_mana(mana_card_id, target_monster_id)
         return (False, success) # Redraw on success, but don't end turn
 
     @staticmethod
     def handle_attack(game_state, *args) -> bool | bool:
         # TODO: Allow user to specify which attack to use
-        success = game_state.player.active_monster.use_attack(0, game_state.player, game_state.opponent)
+        success = game_state.active_player.active_monster.use_attack(0, game_state.active_player, game_state.waiting_player)
         if success:
-            print(f"{game_state.player.title}'s turn has ended.")
+            print(f"{game_state.active_player.title}'s turn has ended.")
         # Return the success status to determine if the turn ends
         return (success, True) # End turn and redraw if successful
 
     @staticmethod
     def handle_bench(game_state, *args) -> bool | bool:
-        hand_string = TerminalView.get_hand_list_string(game_state.player)
+        hand_string = TerminalView.get_hand_list_string(game_state.active_player)
         print(hand_string)
         index = input("Select card to bench by displayed ID. ")
         try:
-            success = game_state.player.add_to_bench(int(index))
+            success = game_state.active_player.add_to_bench(int(index))
             return (False, success) # Redraw if successful, but don't end turn
         except KeyError:
             print(f"Invalid index: {index}")
@@ -118,13 +118,18 @@ class CommandHandler:
                 print(f"Invalid quantity: {args[1]}")
                 return (False, False)
 
-        success = game_state.player.add_mana(game_state.player.active_monster, mana_type, qty)
+        success = game_state.active_player.add_mana(game_state.active_player.active_monster, mana_type, qty)
         return (False, success) # Redraw if successful, but don't end turn
+
+    @staticmethod
+    def handle_pass(game_state, *args):
+        """Ends the current player's turn."""
+        return (True, False) # End the turn, no redraw needed here (main loop handles it)
 
     @staticmethod
     def handle_show(game_state, *args) -> bool | bool:
         if args and args[0] == "hand":
-            hand_string = TerminalView.get_hand_list_string(game_state.player)
+            hand_string = TerminalView.get_hand_list_string(game_state.active_player)
             print(hand_string)
         else:
             print("Usage: show hand")
@@ -138,26 +143,26 @@ class CommandHandler:
         print("Resetting game state...")
         
         # This logic is mirrored from main.py
-        game_state.player.reset()
-        game_state.opponent.reset()
+        game_state.player1.reset()
+        game_state.player2.reset()
 
         from main import generate_deck_from_list # Local import to avoid circular dependency
-        generate_deck_from_list(give_test_card(100), player_unit=game_state.player)
-        generate_deck_from_list(give_test_card(100), player_unit=game_state.opponent)
+        generate_deck_from_list(give_test_card(100), player_unit=game_state.player1)
+        generate_deck_from_list(give_test_card(100), player_unit=game_state.player2)
 
         # Initialize, shuffle, and draw for both players
-        game_state.player.initialize_deck()
-        game_state.player.shuffle_deck()
-        game_state.player.draw_from_deck(7)
+        game_state.player1.initialize_deck()
+        game_state.player1.shuffle_deck()
+        game_state.player1.draw_from_deck(7)
 
-        game_state.opponent.initialize_deck()
-        game_state.opponent.shuffle_deck()
-        game_state.opponent.draw_from_deck(7)
+        game_state.player2.initialize_deck()
+        game_state.player2.shuffle_deck()
+        game_state.player2.draw_from_deck(7)
 
         # Pre-activating an opponent monster (test).
-        for card_id, card in game_state.opponent.hand.items():
+        for card_id, card in game_state.player2.hand.items():
             if card.card.type == CardType.MONSTER:
-                game_state.opponent.set_active_monster(card_id)
+                game_state.player2.set_active_monster(card_id)
                 # This break ensures we only activate the first monster found.
                 break
 
@@ -186,7 +191,7 @@ class CommandHandler:
             print(f"Invalid card ID: {args[0]}. Please provide a number.")
             return (False, False)
 
-        card_in_hand = game_state.player.hand.get(card_id_to_use)
+        card_in_hand = game_state.active_player.hand.get(card_id_to_use)
 
         if not card_in_hand:
             print(f"Card with ID {card_id_to_use} not found in your hand.")
@@ -196,7 +201,7 @@ class CommandHandler:
             print(f"Card '{card_in_hand.title}' is not a utility card.")
             return (False, False)
         
-        success = game_state.player.use_utility_card(card_id_to_use, game_state)
+        success = game_state.active_player.use_utility_card(card_id_to_use, game_state)
         return (False, success)
 
 
@@ -209,6 +214,7 @@ class CommandHandler:
         "evolve": handle_evolve,
         "exit": handle_exit,
         "mana": handle_mana,
+        "pass": handle_pass,
         "show": handle_show,
         "reset": handle_reset,
         "retreat": handle_retreat,

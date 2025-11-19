@@ -147,17 +147,16 @@ class TerminalView:
     def print_prompt(player: PlayerUnit) -> str:
         parts = ["== actions:"]
 
-        # Add commands that are always available
-        parts.append("view [id] | show hand | exit")
+        # Add commands that are always available during a player's turn
+        parts.append("pass | view [id] | show hand | exit")
 
         # Activation is available when there is no active monster
         if not player.active_monster:
             parts.append("| activate")
-
-        if player.active_monster and player.active_monster.mana_pool is True:
-            parts.append("| ATTACK")
-
-            parts.append("| bench | evolve | attach | utility | retreat | ability | ATTACK")
+        else:
+            # These actions require an active monster
+            parts.append("| bench | evolve | attach | use | retreat | ability | attack")
+            
         return " ".join(parts)
 
     @staticmethod
