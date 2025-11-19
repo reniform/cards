@@ -2,6 +2,7 @@ import logging
 
 from core.enums import CardType, StageType
 
+
 logger = logging.getLogger(__name__)
 
 class RulesEngine:
@@ -101,35 +102,95 @@ class RulesEngine:
         return actions
     
     @staticmethod
+    def _validate_attack_action(game_state, player, attack_index: int, target_monster_id: int) -> tuple[bool, str | None]:
+        """
+        Validates if a specific attack action is legal, returning a reason for failure.
+
+        Args:
+            game_state (GameState): The current state of the game.
+            player (PlayerUnit): The player attempting the action.
+            attack_index (int): The index of the attack being used.
+            target_monster_id (int): The ID of the monster being targeted.
+
+        Returns:
+            A tuple of (bool, str | None): (True, None) if legal, (False, "reason") if illegal.
+        """
+        attacker = player.active_monster
+        # Check for the active monster.
+        if not attacker:
+            return (False, f"{player.title} has no active monster to attack with.")
+        
+        # Check if the active monster has attacked already (sanity check).
+        if attacker.has_attacked:
+            return (False, f"{player.title}'s active monster has already attacked this turn.")
+        
+        # Check for attacks on the first turn.
+        if game_state.turn_count <= 1:
+            return (False, f"{player.title} cannot attack on their first turn.")
+        
+        # Check for special conditions that prevent attacking.
+        if 'sleep' in attacker.special_conditions:
+            return (False, f"{player.title}'s active monster is Asleep and cannot attack.")
+        if 'paralyzed' in attacker.special_conditions:
+            return (False, f"{player.title}'s active monster is Paralyzed and cannot attack.")
+        
+        # Check for a valid attack index.
+        if not (0 <= attack_index < len(attacker.card.attacks)):
+            return (False, f"Invalid attack index for {attacker.title}: {attack_index}")
+        
+        # Validate the target monster.
+        target_monster = None
+        if game_state.waiting_player.active_monster and game_state.waiting_player.active_monster.id == target_monster_id:
+            target_monster = game_state.waiting_player.active_monster
+        # TODO: Implement bench sniping.
+        # elif game_state.waiting_player.bench.get(target_monster_id):
+        #     target_monster = game_state.waiting_player.bench.get(target_monster_id)
+
+        if not target_monster:
+            return (False, f"Target monster with ID {target_monster_id} not found or not a valid target.")
+        
+        # Current rule: only active monster can be targeted.
+        if target_monster != game_state.waiting_player.active_monster:
+            return (False, "You can only attack the opponent's active monster.")
+
+        # Check for sufficient mana for the chosen attack.
+        attack = attacker.card.attacks[attack_index]
+        if not attacker.has_mana(attack.cost):
+            return (False, f"Not enough mana for {attack.title}")
+        
+        # All checks pass! The action is legal.
+        return (True, None)
+        
+    @staticmethod
     def _get_attack_actions(game_state, player) -> list:
         actions = []
         attacker = player.active_monster
-        opponent = game_state.waiting_player
-
-        # Check if active mon exists or has attacked before
-        if attacker is None or attacker.has_attacked:
+        if not attacker: 
             return actions
-        
-        # Get valid targets.
-        valid_targets = [opponent.active_monster]
-        # Later with bench sniping: valid_targets.extend(opponent.bench)
 
-        # Iterate through each attack to see if it's usable
+        # Identify potential target monsters (currently only the opponent's active monster).
+        potential_target_monsters = []
+        if game_state.waiting_player.active_monster:
+            potential_target_monsters.append(game_state.waiting_player.active_monster)
+
+        if not potential_target_monsters:
+            return actions # No targets, so no attack actions.
+
+        # Iterate through each attack of the active monster.
         for i, attack in enumerate(attacker.card.attacks):
-            # Check if the monster has enough mana for this specific attack
-            if player.active_monster.has_mana(attack.cost):
-                # If affordable, create an action for each valid target
-                for target in valid_targets:
-                    if target: # Ensure target exists
-                        actions.append({
-                            "type": "ATTACK",
-                            "payload": {
-                                "attack_name": attack.title,
-                                "attack_index": i,
-                                "target_id": target.id
-                            }
-                        })
-                        logger.debug(f"Legal action approved: ATTACK '{attack.title}' on target {target.id} for {player.title}")
+            # For each attack, check against all potential targets.
+            for target_monster in potential_target_monsters:
+                is_legal, _ = RulesEngine._validate_attack_action(game_state, player, i, target_monster.id)
+                if is_legal:
+                    actions.append({
+                        "type": "ATTACK",
+                        "payload": {
+                            "attack_name": attack.title,
+                            "attack_index": i,
+                            "target_id": target_monster.id
+                        }
+                    })
+                    logger.debug(f"Legal action approved: ATTACK '{attack.title}' (index {i}) on target {target_monster.title} (ID: {target_monster.id}) for {player.title}")
         return actions
     
     @staticmethod

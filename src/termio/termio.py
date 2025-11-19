@@ -1,8 +1,10 @@
 import os
 from core.enums import CardType, StageType
 from core.carddata import give_test_card
+from core.rules import RulesEngine
 from termio.view import TerminalView
-
+import logging
+logger = logging.getLogger(__name__)
 
 class CommandHandler:
     def handle_ability(game_state, *args):
@@ -100,13 +102,40 @@ class CommandHandler:
 
     @staticmethod
     def handle_attack(game_state, *args) -> bool | bool:
-        if "ATTACK" not in game_state.legal_action_types:
-            print("You can't attack right now.")
+        """
+        Handles the 'attack' command.
+        Usage: attack [attack_index] [on <target_id>]
+        Defaults to attack_index 0 and the opponent's active monster if not specified.
+        """
+        # 1. Parse arguments and set defaults.
+        attack_index = 0
+        target_id = None
+
+        try:
+            if args:
+                attack_index = int(args[0])
+            
+            # Default target is the opponent's active monster.
+            if game_state.waiting_player.active_monster:
+                target_id = game_state.waiting_player.active_monster.id
+
+            # Check for explicit target.
+            if len(args) >= 3 and args[1].lower() == 'on':
+                target_id = int(args[2])
+
+        except (ValueError, IndexError):
+            logger.warning("Invalid command format. Usage: attack [attack_index] [on <target_id>]")
             return (False, False)
 
-        # TODO: Allow user to specify which attack to use
+        # 2. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_attack_action(game_state, game_state.active_player, attack_index, target_id)
+        if not is_legal:
+            logger.warning(f"ATTACK failed: {reason}") # Print the specific reason for failure.
+            return (False, False)
+
+        # 3. Execute the attack.
         success = game_state.active_player.active_monster.use_attack(
-            0, game_state.active_player, game_state.waiting_player
+            attack_index, game_state.active_player, game_state.waiting_player
         )
         if success:
             print(f"{game_state.active_player.title}'s turn has ended.")
