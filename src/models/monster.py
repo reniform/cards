@@ -94,6 +94,7 @@ class MonsterCard(CardTemplate):
         self.health = self.card.health
         self.mana_pool = {mana_type: 0 for mana_type in ManaType}  # Deprecated
         self.attached_mana = {}
+        self.special_conditions = {}
         self.prior_evos = []
         # Parse abilities into Effect instances
         self.abilities = [
@@ -243,3 +244,31 @@ class MonsterCard(CardTemplate):
                 to_spend = min(available, colorless_needed)
                 self.mana_pool[mana_type] -= to_spend
                 colorless_needed -= to_spend
+
+    #! SPECIAL CONDITIONS
+    def add_special_condition(self, type) -> None:
+        """
+        Adds a special condition.
+        """
+        self.special_conditions[type] = True
+
+    def remove_special_condition(self, type) -> dict:
+        """
+        Removes and returns a special condition.
+        """
+        return self.special_conditions.pop(type, None)
+
+    def handle_asleep(self) -> None:
+        pass
+
+    def handle_burned(self) -> None:
+        pass
+
+    def handle_confused(self) -> None:
+        pass
+
+    def handle_paralyzed(self) -> None:
+        pass
+
+    def handle_poisoned(self) -> None:
+        pass
