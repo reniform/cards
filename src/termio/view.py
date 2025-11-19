@@ -176,20 +176,24 @@ class TerminalView:
         return "\n".join(lines)
 
     @staticmethod
-    def print_prompt(player: PlayerUnit) -> str:
+    def print_prompt(legal_action_types: set) -> str:
+        """
+        Builds the action prompt string based on a set of legal action types
+        provided by the game engine.
+        """
         parts = ["== actions:"]
 
-        # Add commands that are always available during a player's turn
-        parts.append("pass | view [id] | show hand | exit")
-
-        # Activation is available when there is no active monster
-        if not player.active_monster:
-            parts.append("| activate")
-        else:
-            # These actions require an active monster
-            parts.append("| bench | evolve | attach | use | retreat | ability | attack")
-            
-        return " ".join(parts)
+        # Use the provided set of legal actions to build the prompt.
+        # The order can be defined here for a consistent look.
+        if 'PASS' in legal_action_types: parts.append("pass")
+        if 'ACTIVATE' in legal_action_types: parts.append("activate")
+        if 'ATTACH' in legal_action_types: parts.append("attach")
+        if 'ATTACK' in legal_action_types: parts.append("attack")
+        # Add other commands as they become legal
+        # parts.append("bench | use | retreat | etc...")
+        
+        parts.append("show hand | exit")
+        return " | ".join(parts)
 
     @staticmethod
     def get_attack_list_string(monster) -> str:

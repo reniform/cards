@@ -17,11 +17,22 @@ class CommandHandler:
         :return: A tuple of `False` (not a turn-ending action) and `True` (action completed successfully.)
         """
         if not args:
-            print("Usage: activate <card_id>")
+            print("Usage: activate <card_id_from_hand>")
             return (False, False)
         
+        # 1. Check if activating is a legal action type right now.
+        if 'ACTIVATE' not in game_state.legal_action_types:
+            print("You can't activate a monster right now (one is already active).")
+            return (False, False)
+
         try:
             card_id = int(args[0])
+            # 2. Check if activating THIS SPECIFIC card is a legal action.
+            is_legal = any(action['payload']['card_id'] == card_id for action in game_state.legal_actions if action['type'] == 'ACTIVATE')
+            if not is_legal:
+                print(f"Card ID {card_id} is not a valid monster to activate from your hand.")
+                return (False, False)
+            
             success = game_state.active_player.set_active_monster(card_id)
             if not success:
                 print("Could not activate monster. Check logs for details.")
@@ -36,6 +47,11 @@ class CommandHandler:
         Handles the 'attach' command to attach a mana card from hand to a monster.
         Usage: attach <mana_card_id> [to <target_monster_id>]
         """
+        # 1. Check if attaching is a legal action type right now.
+        if 'ATTACH' not in game_state.legal_action_types:
+            print("You can't attach a mana card right now.")
+            return (False, False)
+
         # 1. Validate command structure and parse IDs
         if len(args) == 1:
             # Default to active monster if only one argument is given
@@ -60,29 +76,25 @@ class CommandHandler:
             print("Usage: attach <mana_card_id> [to <target_monster_id>]")
             return (False, False)
 
-        # 2. Check if the mana card is valid
-        mana_card = game_state.active_player.hand.get(mana_card_id)
-        if not mana_card or mana_card.card.type != CardType.MANA:
-            print(f"Card ID {mana_card_id} is not a valid mana card in your hand.")
+        # 2. Check if this specific attachment is a legal action.
+        is_legal = any(
+            action['payload']['mana_card_id'] == mana_card_id and action['payload']['target_monster_id'] == target_monster_id
+            for action in game_state.legal_actions if action['type'] == 'ATTACH'
+        )
+        if not is_legal:
+            print(f"Attaching mana card {mana_card_id} to monster {target_monster_id} is not a legal move right now.")
             return (False, False)
 
-        # 3. Check if the target monster is valid (active or benched)
-        target_monster = None
-        if game_state.active_player.active_monster and game_state.active_player.active_monster.id == target_monster_id:
-            target_monster = game_state.active_player.active_monster
-        else:
-            target_monster = game_state.active_player.bench.get(target_monster_id)
-        
-        if not target_monster:
-            print(f"Target monster with ID {target_monster_id} not found on your field.")
-            return (False, False)
-
-        # 4. Execute the action
+        # 3. Execute the action
         success = game_state.active_player.attach_mana(mana_card_id, target_monster_id)
         return (False, success) # Redraw on success, but don't end turn
 
     @staticmethod
     def handle_attack(game_state, *args) -> bool | bool:
+        if 'ATTACK' not in game_state.legal_action_types:
+            print("You can't attack right now.")
+            return (False, False)
+
         # TODO: Allow user to specify which attack to use
         success = game_state.active_player.active_monster.use_attack(0, game_state.active_player, game_state.waiting_player)
         if success:
