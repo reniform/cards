@@ -115,24 +115,27 @@ class CommandHandler:
 
     @staticmethod
     def handle_bench(game_state, *args) -> bool | bool:
-        hand_string = TerminalView.get_hand_list_string(game_state.active_player)
-        print(hand_string)
-        index = input("Select card to bench by displayed ID. ")
-        try:
-            success = game_state.active_player.add_to_bench(int(index))
-            return (False, success)  # Redraw if successful, but don't end turn
-        except KeyError:
-            print(f"Invalid index: {index}")
+        """
+        Handles the 'bench' command to move a monster from hand to bench.
+        Usage: bench <card_id_from_hand>
+        """
+        if not args:
+            print("Usage: bench <card_id_from_hand>")
             return (False, False)
+
+        try:
+            card_id = int(args[0])
+            success = game_state.active_player.add_to_bench(card_id)
+            return (False, success)  # Redraw if successful, but don't end turn
         except ValueError:
-            print(f"Invalid index: {index}")
+            print(f"Invalid card ID: {args[0]}")
             return (False, False)
 
     @staticmethod
     def handle_evolve(game_state, *args):
         """
         Handles the 'evolve' command.
-        Usage: evolve <evolution_card_id> from <base_monster_id>
+        Usage: evolve <base_monster_id> to <evolution_card_id>
         """
         # 1. Check if evolving is a legal action type.
         if "EVOLVE" not in game_state.legal_action_types:
@@ -140,28 +143,28 @@ class CommandHandler:
             return (False, False)
 
         # 2. Validate command structure.
-        if len(args) != 3 or args[1].lower() != "from":
-            print("Usage: evolve <evolution_card_id> from <base_monster_id>")
+        if len(args) != 3 or args[1].lower() != "to":
+            print("Usage: evolve <base_monster_id> to <evolution_card_id>")
             return (False, False)
 
         # 3. Parse and validate IDs.
         try:
-            evo_card_id = int(args[0])
-            base_monster_id = int(args[2])
+            base_monster_id = int(args[0])
+            evo_card_id = int(args[2])
         except ValueError:
             print("Invalid ID. Please provide numbers for card IDs.")
             return (False, False)
 
         # 4. Check if this specific evolution is a legal action.
         is_legal = any(
-            action["payload"]["evolution_card_id"] == evo_card_id
-            and action["payload"]["base_monster_id"] == base_monster_id
+            action["payload"]["base_monster_id"] == base_monster_id
+            and action["payload"]["evolution_card_id"] == evo_card_id
             for action in game_state.legal_actions
             if action["type"] == "EVOLVE"
         )
         if not is_legal:
             print(
-                f"Evolving monster {base_monster_id} with card {evo_card_id} is not a legal move."
+                f"Evolving monster {base_monster_id} into {evo_card_id} is not a legal move."
             )
             return (False, False)
 
@@ -256,7 +259,36 @@ class CommandHandler:
 
     @staticmethod
     def handle_retreat(game_state, *args):
-        pass
+        """
+        Handles the 'retreat' command.
+        The player must select a benched monster to promote.
+        """
+        player = game_state.active_player
+
+        # 1. Perform initial checks for retreat possibility.
+        if not player.active_monster:
+            print("You have no active monster to retreat.")
+            return (False, False)
+
+        if not player.bench:
+            print("You have no benched monsters to promote.")
+            return (False, False)
+
+        # 2. Prompt user to select a new active monster from the bench.
+        print("Your Bench:")
+        print(TerminalView.print_bench(player))
+        new_active_id_str = input(
+            "Select a monster from your bench to promote to the active spot (by ID): "
+        )
+
+        try:
+            new_active_id = int(new_active_id_str)
+            # 3. Execute the retreat action.
+            success = player.retreat_active_monster(new_active_id)
+            return (False, success)  # Redraw on success, but don't end turn
+        except (ValueError, KeyError):
+            print(f"Invalid ID: '{new_active_id_str}'. Please enter a valid number.")
+            return (False, False)
 
     @staticmethod
     def handle_utility(game_state, *args):
