@@ -24,7 +24,7 @@ class TerminalView:
     """
     @staticmethod
     def get_mana_pool_string(monster) -> str:
-        """Returns the monster's current mana pool as a formatted string."""
+        """Returns s shorthand of the mana pool as a formatted string."""
         # Use the total_mana property which includes attached mana cards.
         pool_parts = [f"{ManaColor[k.name].value}{v}{k.value[:1].upper()}{k.value[1:2].lower()}{cf.reset}"
                       for k, v in monster.total_mana.items() if v > 0]
@@ -99,7 +99,15 @@ class TerminalView:
             f"{active_mon_health}/{active_mon_max_health}",
             f"{TerminalView.get_mana_pool_string(player.active_monster)}"
         ]
-        return " ".join(parts)
+        main_line = " ".join(parts)
+
+        # Get the attack list string and append it
+        attack_list = TerminalView.get_attack_list_string(player.active_monster)
+        
+        if attack_list:
+            return f"{main_line}\n{attack_list}"
+        else:
+            return main_line
     
     @staticmethod 
     def print_hand(player) -> str:
@@ -158,6 +166,29 @@ class TerminalView:
             parts.append("| bench | evolve | attach | use | retreat | ability | attack")
             
         return " ".join(parts)
+
+    @staticmethod
+    def get_attack_list_string(monster) -> str:
+        """
+        Returns a formatted multi-line string of the monster's available attacks,
+        including their costs and damage.
+        """
+        if not monster or not monster.card.attacks:
+            return ""
+
+        attack_strings = []
+        for i, attack in enumerate(monster.card.attacks):
+            # Format the mana cost for this specific attack
+            cost_parts = [f"{ManaColor[k.name].value}{v}{k.value[:1].upper()}{k.value[1:2].lower()}{cf.reset}"
+                          for k, v in attack.cost.items() if v > 0]
+            cost_string = " ".join(cost_parts) if cost_parts else ""
+
+            # Check if the monster can afford this attack to adjust the color
+            can_afford = monster.has_mana(attack.cost)
+            attack_title_color = cf.bold if can_afford else cf.darkGray
+
+            attack_strings.append(f"\t  [{i}] {attack_title_color}{attack.title:<18}{cf.reset} {attack.damage:<3} dmg ({cost_string})")
+        return "\n".join(attack_strings)
 
     @staticmethod
     def get_player_status_string(player: PlayerUnit, bold=False) -> str:
