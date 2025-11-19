@@ -71,6 +71,19 @@ def main() -> None:
     player.draw_from_deck(7)
     opponent.draw_from_deck(7)
 
+    # 3a. Handle mulligans if no basic monster is in the opening hand.
+    while not player.has_basic_monster_in_hand():
+        logger.warning(f"{player.title} has no basic monster, redrawing hand.")
+        player.return_hand_to_deck()
+        player.shuffle_deck()
+        player.draw_from_deck(7)
+
+    while not opponent.has_basic_monster_in_hand():
+        logger.warning(f"{opponent.title} has no basic monster, redrawing hand.")
+        opponent.return_hand_to_deck()
+        opponent.shuffle_deck()
+        opponent.draw_from_deck(7)
+
     # Pre-activate an opponent monster for testing purposes.
     for card_id, card in opponent.hand.items():
         if card.card.type == CardType.MONSTER:

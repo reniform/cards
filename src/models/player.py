@@ -151,6 +151,22 @@ class PlayerUnit:
         """
         return self.hand.pop(card_id, None)
 
+    def return_hand_to_deck(self):
+        """
+        Returns all cards from the hand back to the deck.
+        """
+        for card_id, card in self.hand.items():
+            self.deck[card_id] = card
+        self.hand.clear()
+        logger.info(f"Returned hand to deck for player {self.title}.")
+
+    def has_basic_monster_in_hand(self) -> bool:
+        """Checks if there is at least one Basic Monster in the hand."""
+        for card in self.hand.values():
+            if card.card.type == CardType.MONSTER and card.card.stage == StageType.BASIC:
+                return True
+        return False
+
     #! DECK -> HAND
     def draw_from_deck(self, qty=1):
         """
