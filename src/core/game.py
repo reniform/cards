@@ -34,17 +34,46 @@ class GameState:
         logger.debug(f'Legal action approved: PASS for {player.title}')
 
         # --- Check: Can the player ATTACK? ---
-        if player.active_monster and not player.active_monster.has_attacked:
-            # Check if the monster has enough mana for at least one of its attacks.
-            can_attack = False
-            for attack in player.active_monster.card.attacks:
-                if player.active_monster.has_mana(attack.cost):
-                    can_attack = True
-                    break  # Found a usable attack, no need to check further
-            if can_attack:
-                legal_actions.append({"type": "ATTACK"})
-                logger.debug(f"Legal action approved: ATTACK for {player.title}")
+        # Player who goes first cannot attack on their first turn (turn_count == 1).
+        # For target discovery, see get_valid_targets() below.
+        if self.turn_count > 1:
+            attack_actions = self._get_attack_actions(player, self.waiting_player)
+            legal_actions.extend(attack_actions)
+
+        #  --- Check: Can the player ATTACH mana?
         return legal_actions
+    
+    def _get_attack_actions(self, player, opponent):
+        actions = []
+        attacker = player.active_monster
+
+        # Check if active mon exists or has attacked before
+        if attacker is None or attacker.has_attacked:
+            return actions
+        
+        # Get valid targets.
+        valid_targets = [opponent.active_monster]
+        # Later with bench sniping: valid_targets.extend(opponent.bench)
+
+        # Iterate through each attack to see if it's usable
+        for i, attack in enumerate(attacker.card.attacks):
+            # Check if the monster has enough mana for this specific attack
+            if player.active_monster.has_mana(attack.cost):
+                # If affordable, create an action for each valid target
+                for target in valid_targets:
+                    if target: # Ensure target exists
+                        actions.append({
+                            "type": "ATTACK",
+                            "payload": {
+                                "attack_name": attack.title,
+                                "attack_index": i,
+                                "target": target,
+                                "target_id": target.id
+                            }
+                        })
+                        logger.debug(f"Legal action approved: ATTACK '{attack.title}' on target {target.id} for {player.title}")
+        return actions
+
 
     def next_turn(self) -> None:
         """

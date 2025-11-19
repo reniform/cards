@@ -98,6 +98,12 @@ class MonsterCard(CardTemplate):
 
         #! STATE FLAGS
         self.has_attacked = False
+        self.has_attached = False
+
+    @property
+    def title(self):
+        """Returns the title from the card template."""
+        return self.card.title
 
     def use_attack(self, attack_index, player, target) -> bool:
         """Performs attack from the given index. Attacks take the form of dicts and are kept in a list.

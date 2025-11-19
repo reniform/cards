@@ -15,3 +15,8 @@ class ManaCard(CardTemplate):
         # Receive unique ID from superclass
         super().__init__()  # self.id
         self.card = card
+
+    @property
+    def title(self):
+        """Returns the title from the card template."""
+        return self.card.title

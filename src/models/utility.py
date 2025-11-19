@@ -48,3 +48,8 @@ class UtilityCard(CardTemplate):
             if EffectRegistry.create_effect(effect_data) is not None
         ]
         logger.debug(f"Initiate {self.card.type} card ({self.id} {self.card.title})")
+
+    @property
+    def title(self):
+        """Returns the title from the card template."""
+        return self.card.title
