@@ -1,13 +1,15 @@
 from core.enums import CardType
 from .card import CardTemplate
 
+
 class ManaTemplate:
     type = CardType.MANA
+
     def __init__(self, **kwargs):
-        self.type = kwargs['type']
-        self.title = kwargs['title']
-        self.mana_type = kwargs['mana_type']
-        self.mana_val = kwargs['mana_val']
+        self.type = kwargs["type"]
+        self.title = kwargs["title"]
+        self.mana_type = kwargs["mana_type"]
+        self.mana_val = kwargs["mana_val"]
 
 
 class ManaCard(CardTemplate):

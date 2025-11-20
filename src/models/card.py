@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -9,6 +10,7 @@ class CardTemplate:
     * creating a list that keeps track of all cards active in the game field.
     `MonsterTemplate`, `UtilityTemplate`, and `ManaTemplate` all inherit from `CardTemplate.`
     """
+
     _next_id = 0
     _all_cards = {}
 
@@ -26,7 +28,7 @@ class CardTemplate:
 
         # Increment the class-level counter for the next card.
         CardTemplate._next_id += 1
-    
+
     @classmethod
     def get_card_by_id(cls, card_id):
         """
@@ -40,7 +42,7 @@ class CardTemplate:
     @classmethod
     def get_all_cards(cls):
         """
-        Returns the list of all cards within the game field. 
+        Returns the list of all cards within the game field.
 
         :return: A list of all card objects
         """
@@ -51,5 +53,5 @@ class CardTemplate:
         Outputs as: <CardTitle (ID: #)>.
         """
         # Attempts to find a 'title' attribute for a more descriptive name
-        name = getattr(self, 'title', self.__class__.__name__)
+        name = getattr(self, "title", self.__class__.__name__)
         return f"<{name} (ID: {self.id})>"

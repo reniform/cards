@@ -455,7 +455,9 @@ class RulesEngine:
         return actions
 
     @staticmethod
-    def _validate_retreat_action(game_state, player, new_active_id: int) -> tuple[bool, str | None]:
+    def _validate_retreat_action(
+        game_state, player, new_active_id: int
+    ) -> tuple[bool, str | None]:
         """
         Validates if a specific retreat action is legal, returning a reason for failure.
         """

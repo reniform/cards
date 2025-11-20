@@ -3,7 +3,9 @@ from core.enums import CardType
 from .card import CardTemplate
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class UtilityTemplate:
     """
@@ -15,20 +17,22 @@ class UtilityTemplate:
         description (str): Necessary. The card's description, as printed on the card.
         effects (list): Necessary. A list of effects, each their own dictionary.
     """
+
     type = CardType.UTILITY
 
     def __init__(self, **kwargs) -> None:
-        self.title = kwargs['title']
-        self.descrpition = kwargs['description']
-        self.effects = kwargs.get('effects', []) # list: Effect
+        self.title = kwargs["title"]
+        self.descrpition = kwargs["description"]
+        self.effects = kwargs.get("effects", [])  # list: Effect
+
 
 class UtilityCard(CardTemplate):
     """
     Active and mutable instance of a utility card, instantiated from a `UtilityTemplate`.\n
-    A `UtilityCard` composes its classes through the data stored in a `UtilityTemplate` card. 
-    The`UtilityTemplate`s pull their card data, such as name, stage level, attacks, ability, 
-    and data, from dicts, and hold them for a `UtilityCard` to access. The way a `UtilityCard` 
-    accesses its parent's data is by pulling it from their `card` attribute (i.e., `card.id`. 
+    A `UtilityCard` composes its classes through the data stored in a `UtilityTemplate` card.
+    The`UtilityTemplate`s pull their card data, such as name, stage level, attacks, ability,
+    and data, from dicts, and hold them for a `UtilityCard` to access. The way a `UtilityCard`
+    accesses its parent's data is by pulling it from their `card` attribute (i.e., `card.id`.
     `card.mana_type`, `card_retreat_val`.)
 
     Attributes:
@@ -38,6 +42,7 @@ class UtilityCard(CardTemplate):
         attached_mana (dict): A container for attached mana cards, sorted by mana type.
         abilities (list): A list of abilities, drawn from the card template's ability data.
     """
+
     def __init__(self, card) -> None:
         # Receive unique ID from superclass
         super().__init__()
