@@ -78,6 +78,7 @@ def create_effects_table(cursor) -> None:
             target TEXT NOT NULL,
             value TEXT,
             condition TEXT,
+            execution_order INTEGER,
             FOREIGN KEY (source_card_id) REFERENCES cards(id),
             FOREIGN KEY (source_attack_id) REFERENCES attacks(id)
         );
@@ -86,6 +87,12 @@ def create_effects_table(cursor) -> None:
 
 def main():
     """Main script function."""
+    # Safeguard against accidentally overwriting an existing database.
+    if os.path.exists(DB_PATH):
+        print(f"Error: Database file already exists at '{DB_PATH}'.")
+        print("Please delete the file manually if you wish to re-create the database from scratch.")
+        return  # Exit the script
+
     # Create the data directory
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
@@ -100,6 +107,7 @@ def main():
 
     conn.commit()
     conn.close()
+    print(f"\nDatabase created successfully at '{DB_PATH}'.")
 
 
 if __name__ == "__main__":
