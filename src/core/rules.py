@@ -1,6 +1,6 @@
 import logging
 
-from core.enums import CardType, StageType
+from core.enums import CardType, StageType, ManaType
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,14 @@ class RulesEngine:
         # --- Check: Can the player EVOLVE a monster? ---
         evolve_actions = RulesEngine._get_evolve_actions(game_state, player)
         legal_actions.extend(evolve_actions)
+
+        # --- Check: Can the player RETREAT their active monster? ---
+        retreat_actions = RulesEngine._get_retreat_actions(game_state, player)
+        legal_actions.extend(retreat_actions)
+
+        # --- Check: Can the player USE a utility card? ---
+        use_actions = RulesEngine._get_use_actions(game_state, player)
+        legal_actions.extend(use_actions)
 
         return legal_actions
 
@@ -129,15 +137,21 @@ class RulesEngine:
             target_monster = player.bench.get(target_monster_id)
 
         if not target_monster:
-            return (False, f"Target monster with ID {target_monster_id} not found on your field.")
+            return (
+                False,
+                f"Target monster with ID {target_monster_id} not found on your field.",
+            )
 
         # 3. Check the "one attachment per monster per turn" rule.
         if target_monster.has_attached:
-            return (False, f"'{target_monster.title}' has already had mana attached this turn.")
+            return (
+                False,
+                f"'{target_monster.title}' has already had mana attached this turn.",
+            )
 
         # All checks pass! The action is legal.
         return (True, None)
-        
+
     @staticmethod
     def _get_attach_actions(game_state, player) -> list:
         """
@@ -151,12 +165,12 @@ class RulesEngine:
         mana_in_hand = [
             card for card in player.hand.values() if card.card.type == CardType.MANA
         ]
- 
+
         # 2. Identify all potential monster targets on the field.
         monsters_on_field = (
             [player.active_monster] if player.active_monster else []
         ) + list(player.bench.values())
- 
+
         # 3. For every combination, ask the "judge" if the action is legal.
         for mana_card in mana_in_hand:
             for target_monster in monsters_on_field:
@@ -307,21 +321,26 @@ class RulesEngine:
         # 2. Check if the monster is Basic.
         if card_to_bench.card.stage != StageType.BASIC:
             return (False, f"Card '{card_to_bench.title}' is not a Basic monster.")
-        
+
         # 3. Check if an active monster exists.
         # A player should activate a monster before benching.
         # (This should eventually be turned off for the setup stage.)
         if not player.active_monster:
-            return (False, f"Player must activate a monster before benching {card_to_bench.title}.")
-        
+            return (
+                False,
+                f"Player must activate a monster before benching {card_to_bench.title}.",
+            )
+
         # 4. Check if bench is already full.
         if len(player.bench) >= player.CONST_MAX_BENCH_CARDS:
-            return (False, f"Player {player.title} bench is already full (max: {player.CONST_MAX_BENCH_CARDS}.)")
-        
+            return (
+                False,
+                f"Player {player.title} bench is already full (max: {player.CONST_MAX_BENCH_CARDS}.)",
+            )
+
         # All checks pass! The action is legal.
         return (True, None)
-        
-    
+
     @staticmethod
     def _get_bench_actions(game_state, player) -> list:
         """
@@ -330,7 +349,9 @@ class RulesEngine:
         actions = []
         # For each card in hand, ask the "judge" if it's a legal bench action.
         for card in player.hand.values():
-            is_legal, _ = RulesEngine._validate_bench_action(game_state, player, card.id)
+            is_legal, _ = RulesEngine._validate_bench_action(
+                game_state, player, card.id
+            )
             if is_legal:
                 actions.append(
                     {
@@ -338,7 +359,9 @@ class RulesEngine:
                         "payload": {"card_id": card.id, "card_title": card.title},
                     }
                 )
-                logger.debug(f"Legal action approved: BENCH for {card.title} ({card.id})")
+                logger.debug(
+                    f"Legal action approved: BENCH for {card.title} ({card.id})"
+                )
         return actions
 
     @staticmethod
@@ -351,7 +374,10 @@ class RulesEngine:
         # 1. Validate the evolution card from hand.
         evo_card = player.hand.get(evo_card_id)
         if not evo_card:
-            return (False, f"Evolution card with ID {evo_card_id} not found in your hand.")
+            return (
+                False,
+                f"Evolution card with ID {evo_card_id} not found in your hand.",
+            )
         if evo_card.card.type != CardType.MONSTER or evo_card.card.stage not in [
             StageType.STAGEONE,
             StageType.STAGETWO,
@@ -366,7 +392,10 @@ class RulesEngine:
             base_monster = player.bench.get(base_monster_id)
 
         if not base_monster:
-            return (False, f"Base monster with ID {base_monster_id} not found on your field.")
+            return (
+                False,
+                f"Base monster with ID {base_monster_id} not found on your field.",
+            )
 
         # 3. Check if the evolution is a valid match.
         if evo_card.card.evolve_from != base_monster.title:
@@ -417,20 +446,98 @@ class RulesEngine:
                     actions.append(
                         {
                             "type": "EVOLVE",
-                            "payload": {"evolution_card_id": evo_card.id, "base_monster_id": base_monster.id,},
+                            "payload": {
+                                "evolution_card_id": evo_card.id,
+                                "base_monster_id": base_monster.id,
+                            },
                         }
                     )
         return actions
 
     @staticmethod
+    def _validate_retreat_action(game_state, player, new_active_id: int) -> tuple[bool, str | None]:
+        """
+        Validates if a specific retreat action is legal, returning a reason for failure.
+        """
+        # 1. Check for an active monster.
+        if not player.active_monster:
+            return (False, "You have no active monster to retreat.")
+
+        # 2. Check if the bench is full.
+        if len(player.bench) >= player.CONST_MAX_BENCH_CARDS:
+            return (False, "Your bench is full, you cannot retreat.")
+
+        # 3. Check if the monster to promote exists on the bench.
+        monster_to_promote = player.bench.get(new_active_id)
+        if not monster_to_promote:
+            return (False, f"Monster with ID {new_active_id} not found on your bench.")
+
+        # 4. Check if the active monster can pay the retreat cost.
+        retreat_cost = player.active_monster.card.retreat_val
+        if not player.active_monster.has_mana({ManaType.COLORLESS: retreat_cost}):
+            return (
+                False,
+                f"Not enough mana to pay retreat cost for '{player.active_monster.title}'.",
+            )
+
+        # All checks pass! The action is legal.
+        return (True, None)
+
+    @staticmethod
     def _get_retreat_actions(game_state, player) -> list:
         """
         Generates a list of legal RETREAT actions.
-        A RETREAT action is possible if a player has an active monster that
-        can pay the retreat cost and has space on the bench to retreat.
         """
-        pass
+        actions = []
+        # For each monster on the bench, check if it can be promoted.
+        for benched_monster in player.bench.values():
+            is_legal, _ = RulesEngine._validate_retreat_action(
+                game_state, player, benched_monster.id
+            )
+            if is_legal:
+                actions.append(
+                    {
+                        "type": "RETREAT",
+                        "payload": {
+                            "promoted_monster_id": benched_monster.id,
+                        },
+                    }
+                )
+        return actions
+
+    @staticmethod
+    def _validate_use_action(
+        game_state, player, card_id: int
+    ) -> tuple[bool, str | None]:
+        """
+        Validates if a specific use action is legal, returning a reason for failure.
+        """
+        # 1. Validate the card exists in hand.
+        card_to_use = player.hand.get(card_id)
+        if not card_to_use:
+            return (False, f"Card with ID {card_id} not found in your hand.")
+
+        # 2. Validate the card is a utility card.
+        if card_to_use.card.type != CardType.UTILITY:
+            return (False, f"Card '{card_to_use.title}' is not a utility card.")
+
+        # All checks pass! The action is legal.
+        return (True, None)
 
     @staticmethod
     def _get_use_actions(game_state, player) -> list:
-        pass
+        """
+        Generates a list of legal USE actions for utility cards in hand.
+        """
+        actions = []
+        # For each card in hand, ask the "judge" if it's a legal use action.
+        for card in player.hand.values():
+            is_legal, _ = RulesEngine._validate_use_action(game_state, player, card.id)
+            if is_legal:
+                actions.append(
+                    {
+                        "type": "USE",
+                        "payload": {"card_id": card.id, "card_title": card.title},
+                    }
+                )
+        return actions

@@ -4,7 +4,9 @@ from core.carddata import give_test_card
 from core.rules import RulesEngine
 from termio.view import TerminalView
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class CommandHandler:
     def handle_ability(game_state, *args):
@@ -63,7 +65,9 @@ class CommandHandler:
                 target_monster_id = game_state.active_player.active_monster.id
 
         except (ValueError, IndexError):
-            print("Invalid command format. Usage: attach <mana_card_id> [to <target_monster_id>]")
+            print(
+                "Invalid command format. Usage: attach <mana_card_id> [to <target_monster_id>]"
+            )
             return (False, False)
 
         # 2. Validate the action with the RulesEngine.
@@ -94,23 +98,29 @@ class CommandHandler:
         try:
             if args:
                 attack_index = int(args[0])
-            
+
             # Default target is the opponent's active monster.
             if game_state.waiting_player.active_monster:
                 target_id = game_state.waiting_player.active_monster.id
 
             # Check for explicit target.
-            if len(args) >= 3 and args[1].lower() == 'on':
+            if len(args) >= 3 and args[1].lower() == "on":
                 target_id = int(args[2])
 
         except (ValueError, IndexError):
-            logger.warning("Invalid command format. Usage: attack [attack_index] [on <target_id>]")
+            logger.warning(
+                "Invalid command format. Usage: attack [attack_index] [on <target_id>]"
+            )
             return (False, False)
 
         # 2. Validate the action with the RulesEngine.
-        is_legal, reason = RulesEngine._validate_attack_action(game_state, game_state.active_player, attack_index, target_id)
+        is_legal, reason = RulesEngine._validate_attack_action(
+            game_state, game_state.active_player, attack_index, target_id
+        )
         if not is_legal:
-            logger.warning(f"ATTACK failed {game_state.active_player.title}: {reason}") # Print the specific reason for failure.
+            logger.warning(
+                f"ATTACK failed {game_state.active_player.title}: {reason}"
+            )  # Print the specific reason for failure.
             return (False, False)
 
         # 3. Execute the attack.
@@ -274,64 +284,60 @@ class CommandHandler:
     def handle_retreat(game_state, *args):
         """
         Handles the 'retreat' command.
-        The player must select a benched monster to promote.
+        Usage: retreat <benched_monster_id_to_promote>
         """
-        player = game_state.active_player
-
-        # 1. Perform initial checks for retreat possibility.
-        if not player.active_monster:
-            print("You have no active monster to retreat.")
+        # 1. Parse arguments.
+        if not args:
+            print("Usage: retreat <benched_monster_id_to_promote>")
             return (False, False)
-
-        if not player.bench:
-            print("You have no benched monsters to promote.")
-            return (False, False)
-
-        # 2. Prompt user to select a new active monster from the bench.
-        print("Your Bench:")
-        print(TerminalView.print_bench(player))
-        new_active_id_str = input(
-            "Select a monster from your bench to promote to the active spot (by ID): "
-        )
 
         try:
-            new_active_id = int(new_active_id_str)
-            # 3. Execute the retreat action.
-            success = player.retreat_active_monster(new_active_id)
-            return (False, success)  # Redraw on success, but don't end turn
-        except (ValueError, KeyError):
-            print(f"Invalid ID: '{new_active_id_str}'. Please enter a valid number.")
+            new_active_id = int(args[0])
+        except ValueError:
+            print(f"Invalid ID: '{args[0]}'. Please enter a valid number.")
             return (False, False)
+
+        # 2. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_retreat_action(
+            game_state, game_state.active_player, new_active_id
+        )
+        if not is_legal:
+            logger.warning(
+                f"RETREAT failed for {game_state.active_player.title}: {reason}"
+            )
+            return (False, False)
+
+        # 3. Execute the retreat action.
+        success = game_state.active_player.retreat_active_monster(new_active_id)
+        return (False, success)  # Redraw on success, but don't end turn
 
     @staticmethod
     def handle_utility(game_state, *args):
         """
         Handles the 'use' command for playing a utility card from the hand.
-
-        :return: A tuple of `False` (not a turn-ending action) and `True` (action completed successfully.)
+        Usage: use <card_id_from_hand>
         """
         if not args:
             print("Usage: use <card_id_from_hand>")
             return (False, False)
 
-        # Validate card ID.
+        # 1. Parse arguments.
         try:
-            card_id_to_use = int(args[0])
+            card_id = int(args[0])
         except ValueError:
             print(f"Invalid card ID: {args[0]}. Please provide a number.")
             return (False, False)
 
-        card_in_hand = game_state.active_player.hand.get(card_id_to_use)
-
-        if not card_in_hand:
-            print(f"Card with ID {card_id_to_use} not found in your hand.")
+        # 2. Validate the action with the RulesEngine.
+        is_legal, reason = RulesEngine._validate_use_action(
+            game_state, game_state.active_player, card_id
+        )
+        if not is_legal:
+            logger.warning(f"USE failed for {game_state.active_player.title}: {reason}")
             return (False, False)
 
-        if card_in_hand.card.type != CardType.UTILITY:
-            print(f"Card '{card_in_hand.title}' is not a utility card.")
-            return (False, False)
-
-        success = game_state.active_player.use_utility_card(card_id_to_use, game_state)
+        # 3. Execute the action.
+        success = game_state.active_player.use_utility_card(card_id, game_state)
         return (False, success)
 
     COMMANDS = {
