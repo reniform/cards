@@ -111,11 +111,12 @@ def add_monster_abilities(cursor, card_id):
 
         name = input("Enter ability name: ")
         ability_type = input("Enter ability type (e.g., Pokémon Power, Poké-Body): ")
+        description = input("Enter ability description: ")
 
         cursor.execute("""
-            INSERT INTO monster_abilities (card_id, name, type)
-            VALUES (?, ?, ?)
-        """, (card_id, name, ability_type))
+            INSERT INTO monster_abilities (card_id, name, type, description)
+            VALUES (?, ?, ?, ?)
+        """, (card_id, name, ability_type, description))
         ability_id = cursor.lastrowid
         print(f"Successfully added ability '{name}' with ID: {ability_id}")
 
@@ -259,13 +260,14 @@ def add_new_card(cursor):
     # --- 1. Get Conceptual Card Data ---
     title = input("Enter card title: ")
     card_type = input("Enter card type (e.g., MONSTER, UTILITY, MANA): ").upper()
+    subtype = input("Enter card subtype (e.g., EX, Supporter, or leave blank): ").upper()
     set_code = input("Enter the card's original set code (e.g., BS for Base Set): ").upper()
 
     # --- 2. Insert into 'cards' table to create the conceptual card ---
     cursor.execute("""
-        INSERT INTO cards (title, card_type, set_code)
-        VALUES (?, ?, ?)
-    """, (title, card_type, set_code))
+        INSERT INTO cards (title, card_type, subtype, set_code)
+        VALUES (?, ?, ?, ?)
+    """, (title, card_type, subtype, set_code))
 
     card_id = cursor.lastrowid
     print(f"Successfully inserted conceptual card '{title}' with ID: {card_id}")

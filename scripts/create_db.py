@@ -12,6 +12,7 @@ def create_cards_table(cursor) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             card_type TEXT NOT NULL, -- MONSTER, UTILITY, MANA
+            subtype TEXT, -- e.g., EX, GX, Supporter, Item
             set_code TEXT -- The original set code to identify the card archetype
         );
     """)
@@ -125,6 +126,7 @@ def create_monster_abilities_table(cursor) -> None:
             card_id INTEGER NOT NULL,
             name TEXT NOT NULL,
             type TEXT NOT NULL, -- e.g., Pokémon Power, Poké-Body
+            description TEXT, -- The rules text for the ability
             FOREIGN KEY (card_id) REFERENCES cards(id)
         );
     """)
