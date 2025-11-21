@@ -3,6 +3,7 @@ from core.enums import CardType
 from core.carddata import give_test_card
 from core.rules import RulesEngine
 from termio.view import TerminalView
+from models.monster import MonsterCard
 import logging
 
 logger = logging.getLogger(__name__)
@@ -195,6 +196,61 @@ class CommandHandler:
         success = game_state.active_player.evolve_monster(evo_card_id, base_monster_id)
         return (False, success)  # Redraw on success, but don't end turn
 
+    def handle_inspect(game_state, card_id_str: str):
+        """
+        Inspects a card on the field or in hand to see its detailed stats.
+        This is a debug command.
+        Usage: inspect <card_id>
+        """
+        try:
+            card_id = int(card_id_str)
+        except (ValueError, IndexError):
+            print("Usage: inspect <card_id>")
+            return False, False  # Turn not ended, no redraw needed
+
+        card_to_inspect = None
+        player = game_state.active_player
+
+        # Search for the card in the active player's hand, bench, and active slot
+        if card_id in player.hand:
+            card_to_inspect = player.hand[card_id]
+        elif player.active_monster and player.active_monster.id == card_id:
+            card_to_inspect = player.active_monster
+        elif card_id in player.bench:
+            card_to_inspect = player.bench[card_id]
+
+        if not card_to_inspect:
+            print(f"Card with ID {card_id} not found for active player.")
+            return False, False
+
+        # We only know how to inspect monsters for now
+        if not isinstance(card_to_inspect, MonsterCard):
+            print(f"'{card_to_inspect.title}' is not a monster. Inspection not supported for this card type yet.")
+            return False, False
+
+        # --- Print Detailed Stats ---
+        card = card_to_inspect.card  # This is the MonsterTemplate
+        print("\n" + "="*20 + f" Inspecting: {card.title} (ID: {card_to_inspect.id}) " + "="*20)
+        print(f"  - Type: {card.mana_type} ({type(card.mana_type)})")
+        print(f"  - Stage: {card.stage.value} | HP: {card.health}")
+        print(f"  - Evolves From: {card.evolve_from}")
+        print(f"  - Weakness: {card.weak_type} (x{card.weak_mult})")
+        print(f"  - Resistance: {card.resist_type} (-{card.resist_val})")
+        print(f"  - Retreat Cost: {card.retreat_val}")
+        print("\n  --- Attacks ---")
+        if card.attacks:
+            for attack in card.attacks:
+                cost_str = ", ".join([f"{quantity} {mana_type.name.upper()}" for mana_type, quantity in attack.cost.items()])
+                print(f"    - {attack.title}: Damage {attack.damage}, Cost: [{cost_str}]")
+        else:
+            print("    - No attacks.")
+        print("="* (42 + len(card.title) + len(str(card_to_inspect.id))) + "\n")
+        
+        # This command does not end the turn or require a full redraw.
+        # We just print info and let the player take another action.
+        input("(press enter to continue)")
+        return False, True # Turn not ended, but needs redraw to clear the screen
+
     @staticmethod
     def handle_exit(game_state, *args):
         print("Exiting 'cards' program.")
@@ -348,6 +404,7 @@ class CommandHandler:
         "bench": handle_bench,
         "evolve": handle_evolve,
         "exit": handle_exit,
+        "inspect": handle_inspect,
         "mana": handle_mana,
         "pass": handle_pass,
         "show": handle_show,

@@ -36,19 +36,25 @@ def setup_logging():
 
 def generate_deck_from_list(deck_list, player_unit):
     """
-    Populates a player's card field from a list of card data dictionaries.
+    Populates a player's card field from a list of card data.
+    The list can contain either card data dictionaries or pre-instantiated card objects.
     """
     for card_data in deck_list:
-        match card_data["type"]:
-            case CardType.MONSTER:
-                template = MonsterTemplate(**card_data)
-                player_unit.add_to_field(MonsterCard(template))
-            case CardType.UTILITY:
-                template = UtilityTemplate(**card_data)
-                player_unit.add_to_field(UtilityCard(template))
-            case CardType.MANA:
-                template = ManaTemplate(**card_data)
-                player_unit.add_to_field(ManaCard(template))
+        # If the item is already a fully formed card object, add it directly.
+        if isinstance(card_data, (MonsterCard, UtilityCard, ManaCard)):
+            player_unit.add_to_field(card_data)
+        # Otherwise, assume it's a dictionary and build the card from a template.
+        else:
+            match card_data.get("type"):
+                case CardType.MONSTER:
+                    template = MonsterTemplate(**card_data)
+                    player_unit.add_to_field(MonsterCard(template))
+                case CardType.UTILITY:
+                    template = UtilityTemplate(**card_data)
+                    player_unit.add_to_field(UtilityCard(template))
+                case CardType.MANA:
+                    template = ManaTemplate(**card_data)
+                    player_unit.add_to_field(ManaCard(template))
 
 
 def main() -> None:

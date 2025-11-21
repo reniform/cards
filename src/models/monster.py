@@ -43,16 +43,16 @@ class MonsterTemplate:
         self.title = kwargs["title"]  # str
         stage_str = kwargs.get("stage")
         self.stage = StageType(stage_str) if stage_str else None
-        mana_type_str = kwargs.get("mana_type")
-        self.mana_type = ManaType(mana_type_str) if mana_type_str else None
+        # The mana_type is expected to be a ManaType enum object or None.
+        # If it's None, we default to COLORLESS.
+        self.mana_type = kwargs.get("mana_type") or ManaType.COLORLESS
+
         self.evolve_from = kwargs.get("evolve_from")  # str ?
         self.evolve_to = kwargs.get("evolve_to")  # str ?
         self.health = kwargs["health"]  # int
-        weak_type_str = kwargs.get("weak_type")
-        self.weak_type = ManaType(weak_type_str) if weak_type_str else None
+        self.weak_type = kwargs.get("weak_type")
         self.weak_mult = kwargs.get("weak_mult")
-        resist_type_str = kwargs.get("resist_type")
-        self.resist_type = ManaType(resist_type_str) if resist_type_str else None
+        self.resist_type = kwargs.get("resist_type")
         self.resist_val = kwargs.get("resist_val")  # int
         self.retreat_val = kwargs.get("retreat_val")  # int
         self.attacks = [Attack(**atk_data) for atk_data in kwargs["attacks"]]

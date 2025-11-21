@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-
+import logging
+logger = logging.getLogger(__name__)
 
 class Effect(ABC):
     """
@@ -45,7 +46,8 @@ class EffectRegistry:
         # Get the effect_class from the _effects list
         effect_class = cls._effects.get(effect_type)
         if not effect_class:
-            raise ValueError(f"Unknown effect type: {effect_type}")
+            logger.warning(f"Unknown effect type '{effect_type}' encountered. Skipping.")
+            return None
         return effect_class(effect_dict)
 
 

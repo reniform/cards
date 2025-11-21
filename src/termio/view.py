@@ -159,13 +159,13 @@ class TerminalView:
         separator = " | "
 
         for card_id, hand_card in player.hand.items():
-            # Determine the color based on the card type
-            if hand_card.card.type == CardType.MONSTER:
-                color = ManaColor[hand_card.card.mana_type.name].value
-            elif hand_card.card.type == CardType.MANA:
-                color = ManaColor[hand_card.card.mana_type.name].value
-            else:
-                color = cf.white
+            # Default color is white for utility cards or other types.
+            color = cf.white
+            # If the card has a mana_type attribute (like Monsters and Mana cards), use it to set the color.
+            # This uses getattr() to safely check for the attribute without causing an error if it's missing.
+            mana_type_attr = getattr(hand_card.card, 'mana_type', None)
+            if mana_type_attr:
+                color = ManaColor[mana_type_attr.name].value
 
             # Format the card string
             card_str_visible = f"[{card_id}] {hand_card.card.title}"
