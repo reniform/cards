@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import sys
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "cards.db")
 
@@ -289,27 +290,122 @@ def add_new_card(cursor):
     return True
 
 
+def display_card_data(cursor, card_id):
+    """Queries and displays all data for a given card_id."""
+    # This is a simplified display for now. We can make it more detailed later.
+    cursor.execute("SELECT title, card_type, subtype, set_code FROM cards WHERE id = ?", (card_id,))
+    card = cursor.fetchone()
+    if not card:
+        print("Card not found.")
+        return
+
+    print("\n--- Card Details ---")
+    print(f"Title: {card[0]} ({card[2] or 'N/A'})")
+    print(f"Type: {card[1]} | Original Set: {card[3]}")
+
+    # Fetch and display prints
+    cursor.execute("SELECT set_code, set_number, illustrator, rarity FROM card_prints WHERE card_id = ?", (card_id,))
+    prints = cursor.fetchall()
+    print("\n--- Prints ---")
+    for p in prints:
+        print(f"  - Set: {p[0]} | Number: {p[1]} | Illustrator: {p[2]} | Rarity: {p[3]}")
+
+    # If it's a monster, show monster-specific data
+    if card[1] == 'MONSTER':
+        # Fetch and display abilities
+        cursor.execute("SELECT id, name, type, description FROM monster_abilities WHERE card_id = ?", (card_id,))
+        abilities = cursor.fetchall()
+        if abilities:
+            print("\n--- Abilities ---")
+            for ability in abilities:
+                print(f"  - ({ability[2]}) {ability[1]}: {ability[3]}")
+
+    # Fetch and display attacks
+    cursor.execute("SELECT id, title, damage, description FROM attacks WHERE card_id = ?", (card_id,))
+    attacks = cursor.fetchall()
+    if attacks:
+        print("\n--- Attacks ---")
+        for attack in attacks:
+            attack_id, title, damage, description = attack
+            # Fetch costs for this attack
+            cursor.execute("SELECT quantity, mana_type FROM attack_costs WHERE attack_id = ?", (attack_id,))
+            costs = cursor.fetchall()
+            cost_str = ", ".join([f"{c[0]} {c[1]}" for c in costs])
+            print(f"  - {title} [{cost_str}] | Damage: {damage}")
+            print(f"    Description: {description}")
+
+    # Fetch and display Pokedex data for monsters
+    if card[1] == 'MONSTER':
+        cursor.execute("SELECT level, dex_number, species, height_ft_in, weight_lbs, dex_entry FROM pokedex_entries WHERE card_id = ?", (card_id,))
+        pokedex = cursor.fetchone()
+        if pokedex:
+            print("\n--- Pokédex Data ---")
+            print(f"  Level {pokedex[0]} | No. {pokedex[1]} | {pokedex[2]} Pokémon")
+            print(f"  HT: {pokedex[3]}, WT: {pokedex[4]} lbs")
+            print(f"  Entry: {pokedex[5]}")
+
+    print("-" * 20)
+
+
+def read_mode(cursor):
+    """Interactive mode to search for and display card data."""
+    print("\n--- Database Read Mode ---")
+    while True:
+        search_term = input("Enter card title to search for (or 'exit' to quit): ")
+        if search_term.lower() == 'exit':
+            break
+        
+        # Find potential matches
+        cursor.execute("SELECT id, title, set_code FROM cards WHERE title LIKE ?", ('%' + search_term + '%',))
+        results = cursor.fetchall()
+
+        if not results:
+            print("No cards found with that title.")
+            continue
+        elif len(results) == 1:
+            # If only one match, display it directly
+            display_card_data(cursor, results[0][0])
+        else:
+            # If multiple matches, let the user choose
+            print("\nMultiple cards found. Please choose one:")
+            for idx, res in enumerate(results):
+                print(f"  {idx + 1}: {res[1]} (Set: {res[2]})")
+            
+            try:
+                choice = get_int_input("Enter number: ")
+                if 1 <= choice <= len(results):
+                    display_card_data(cursor, results[choice - 1][0])
+                else:
+                    print("Invalid choice.")
+            except (ValueError, TypeError):
+                print("Invalid input.")
+
+
 def main():
     """Main function to connect to the DB and run the interactive card adder."""
     if not os.path.exists(DB_PATH):
         print(f"Error: Database file not found at '{DB_PATH}'.")
         print("Please run 'create_db.py' first to create the database.")
         return
-
+    
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    print("--- Interactive Card Adder ---")
-    while True:
-        add_new_card(cursor)
-        conn.commit()
-        print("Card saved to database.")
+    # Check for command-line arguments to determine mode
+    if len(sys.argv) > 1 and sys.argv[1].lower() == '--read':
+        read_mode(cursor)
+    else:
+        print("--- Interactive Card Adder ---")
+        while True:
+            add_new_card(cursor)
+            conn.commit()
+            print("Card saved to database.")
 
-        if input("\nAdd another card? (y/n): ").lower() != 'y':
-            break
+            if input("\nAdd another card? (y/n): ").lower() != 'y':
+                break
 
     conn.close()
-    print("\nExiting Card Adder. Database connection closed.")
+    print("\nExiting. Database connection closed.")
 
 
 if __name__ == "__main__":
