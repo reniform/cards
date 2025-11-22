@@ -1,6 +1,7 @@
 import logging
 from effects.effects import EffectRegistry
-from src.main import GameState, PlayerUnit
+from core.game import GameState
+from models.player import PlayerUnit
 
 logger = logging.getLogger(__name__)
 

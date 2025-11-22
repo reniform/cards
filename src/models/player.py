@@ -1,8 +1,11 @@
 import logging
 import random
+from typing import TYPE_CHECKING
 
 from core.enums import CardType, ManaType, StageType
-from models.monster import MonsterCard
+
+if TYPE_CHECKING:
+    from models.monster import MonsterCard
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +48,7 @@ class PlayerUnit:
         self.discard: dict = {}
         self.bench: dict = {}
         self.prize: dict = {i: None for i in range(1, 7)}
-        self.active_monster: MonsterCard = None
+        self.active_monster: "MonsterCard" = None
 
     #! FIELD METHODS
     def add_to_field(self, card) -> bool:
@@ -191,6 +194,44 @@ class PlayerUnit:
             logger.debug(f"{card} drawn into player {self.title} hand.")
         return True
 
+    #! PRIZE METHODS
+    def set_prize_cards(self, qty: int):
+        """
+        Sets aside a specified number of cards from the deck as prize cards.
+
+        Args:
+            qty (int): The number of prize cards to set.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        prize_cards_dict = self.remove_from_deck(qty)
+        if not prize_cards_dict or len(prize_cards_dict) < qty:
+            logger.error(
+                f"Could not draw {qty} prize cards for {self.title}, deck is likely empty."
+            )
+            return False
+
+        prize_cards_list = list(prize_cards_dict.values())
+        for i in range(qty):
+            # Prize slots are 1-based
+            self.prize[i + 1] = prize_cards_list[i]
+
+        logger.info(f"Set {qty} prize cards for player {self.title}.")
+        return True
+
+    def take_prize_card(self, prize_slot: int):
+        """
+        Takes a prize card from the specified slot and adds it to the hand.
+
+        Args:
+            prize_slot (int): The 1-based index of the prize card to take.
+        """
+        prize_card = self.prize.pop(prize_slot, None)
+        if prize_card:
+            self.add_to_hand(prize_card)
+            logger.info(f"Player {self.title} took prize card from slot {prize_slot}.")
+
     #! DISCARD METHODS
     def add_to_discard(self, card):
         """
@@ -248,7 +289,7 @@ class PlayerUnit:
         logger.info(f"Benched {card_to_bench.title} for player {self.title}")
         return True
 
-    def remove_from_bench(self, card_id) -> MonsterCard:
+    def remove_from_bench(self, card_id) -> "MonsterCard":
         """
         Removes and returns a card from the bench by its ID.
 
@@ -364,7 +405,9 @@ class PlayerUnit:
             mana_type_str (str): The string representation of the mana type (e.g., "fire").
             qty (int): The amount of mana to add. Defaults to 1.
         """
-        if not isinstance(target, MonsterCard):
+        # We avoid a direct isinstance check to prevent circular import at runtime.
+        # A check on the class name is a safe alternative here.
+        if "MonsterCard" not in str(type(target)):
             logger.warning("Target is not a monster!")
             return False
         try:

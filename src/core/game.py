@@ -4,7 +4,7 @@ import os
 import colorful as cf
 
 from core.rules import RulesEngine
-from src.main import PlayerUnit
+from models.player import PlayerUnit
 from termio.commands import CommandHandler
 from termio.view import TerminalView
 from core.coins import coin

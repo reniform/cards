@@ -1,11 +1,7 @@
 import os
 from core.enums import CardType
-from core.carddata import give_test_card
 from core.rules import RulesEngine
 from termio.view import TerminalView, ManaColor
-from models.monster import MonsterCard
-from models.utility import UtilityCard
-from models.mana import ManaCard
 import logging
 
 logger = logging.getLogger(__name__)
@@ -232,6 +228,11 @@ class CommandHandler:
             print(f"Card with ID {card_id} not found on the field.")
             return False, False
 
+        # Local imports to avoid circular dependency at startup
+        from models.monster import MonsterCard
+        from models.utility import UtilityCard
+        from models.mana import ManaCard
+
         # --- MonsterCard Inspection ---
         if isinstance(card_to_inspect, MonsterCard):
             card = card_to_inspect.card  # This is the MonsterTemplate
@@ -333,6 +334,7 @@ class CommandHandler:
         game_state.player2.reset()
 
         from main import (
+            give_test_card,
             generate_deck_from_list,
         )  # Local import to avoid circular dependency
 

@@ -75,7 +75,7 @@ def main() -> None:
         #"Potion", "Switch"  # Example utility cards (once implemented)
     ] * 4 # Multiply to get a larger deck
 
-    # 2. Generate and setup decks
+    # Generate and setup decks
     generate_deck_from_list(player_deck_list, player_unit=player)
     generate_deck_from_list(give_test_card(60), player_unit=opponent) # Opponent can still use a random deck
 
@@ -84,11 +84,15 @@ def main() -> None:
     opponent.initialize_deck()
     opponent.shuffle_deck()
 
-    # 3. Draw starting hands
+    # Draw prize cards.
+    player.set_prize_cards(6)
+    opponent.set_prize_cards(6)
+
+    # Draw starting hands.
     player.draw_from_deck(7)
     opponent.draw_from_deck(7)
 
-    # 3a. Handle mulligans if no basic monster is in the opening hand.
+    # Handle mulligans if no basic monster is in the opening hand.
     while not player.has_basic_monster_in_hand():
         logger.warning(f"{player.title} has no basic monster, redrawing hand.")
         player.return_hand_to_deck()
@@ -108,7 +112,7 @@ def main() -> None:
             # This break ensures we only activate the first monster found.
             break
 
-    # 4. Create and run the game state
+    # Create and run the game state.
     game = GameState(player, opponent)
     game.run()
 
