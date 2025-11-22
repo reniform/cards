@@ -7,14 +7,17 @@ class Effect(ABC):
     Abstract base class for all effects in the game.
     """
 
-    def __init__(self, effect_dict):
+    def __init__(self, **kwargs):
         """
-        Applies the effect to the target. Effects receive their data from a dict.
+        Initializes an Effect from a dictionary of data, usually from the database.
         """
-        self.effect_type = effect_dict.get("effect_type")
-        # target defaults to self
-        self.target = effect_dict.get("target", "self")
-        self._raw_data = effect_dict
+        self.source_card_id = kwargs.get("source_card_id")
+        self.effect_name = kwargs.get("effect_name")
+        self.target = kwargs.get("target")
+        self.value = kwargs.get("value")
+        self.condition = kwargs.get("condition")
+        self.execution_order = kwargs.get("execution_order")
+        self._raw_data = kwargs
 
     @abstractmethod
     def execute(self, game_state, source_card, target_player):
@@ -41,14 +44,14 @@ class EffectRegistry:
     @classmethod
     def create_effect(cls, effect_dict):
         """Factory method: dict -> Effect instance"""
-        # Get the effect_type str from the dict
-        effect_type = effect_dict.get("effect_type")
+        # Get the effect_name str from the dict, which matches the DB column
+        effect_name = effect_dict.get("effect_name")
         # Get the effect_class from the _effects list
-        effect_class = cls._effects.get(effect_type)
+        effect_class = cls._effects.get(effect_name)
         if not effect_class:
-            logger.warning(f"Unknown effect type '{effect_type}' encountered. Skipping.")
+            logger.warning(f"Unknown effect name '{effect_name}' encountered. Skipping.")
             return None
-        return effect_class(effect_dict)
+        return effect_class(**effect_dict)
 
 
 @EffectRegistry.register("draw_from_deck")
@@ -58,10 +61,14 @@ class DrawEffect(Effect):
     produces a drawn card in the player.
     """
 
-    def __init__(self, effect_dict):
-        super().__init__(effect_dict)
-        self.amount = effect_dict.get("amount", 1)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.amount = self.value or 1  # Use 'value' from DB
 
     def execute(self, game_state, source_card, target_player):
         target_player.draw_from_deck(self.amount)
         # no return: player modified directly
+
+@EffectRegistry.register("APPLY_STATUS")
+class ApplyStatusEffect(Effect):
+    pass
