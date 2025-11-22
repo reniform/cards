@@ -27,14 +27,20 @@ class CardFactory:
         # -- "mana_type" to ManaType ---
         if "mana_type" in kwargs and isinstance(kwargs["mana_type"], str):
             kwargs["mana_type"] = ManaType(kwargs["mana_type"].lower())
-        
+
         # -- "weak_type" to ManaType ---
-        if "weak_type" in kwargs and isinstance(kwargs, str):
+        if "weak_type" in kwargs and isinstance(kwargs["weak_type"], str):
             kwargs["weak_type"] = ManaType(kwargs["weak_type"].lower())
+        # -- bonus mission: strip 'x' from 'weak_mult'
+        if "weak_mult" in kwargs and isinstance(kwargs["weak_mult"], str):
+            kwargs["weak_mult"] = int(kwargs["weak_mult"].replace("x", ""))
 
         # -- "resist_type" to ManaType --
         if "resist_type" in kwargs and isinstance(kwargs["resist_type"], str):
             kwargs["resist_type"] = ManaType(kwargs["resist_type"].lower())
+        #  -- bonus mission: strip '-' from 'resist_val'
+        if "resist_val" in kwargs and isinstance(kwargs["resist_val"], str):
+            kwargs["resist_val"] = int(kwargs["resist_val"].replace("-", ""))
 
         # See Attack class in combat.py for attack handling kwarg arguments.
         return MonsterTemplate(**kwargs)

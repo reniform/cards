@@ -133,13 +133,23 @@ class MonsterCard(CardTemplate):
             )
             return False
 
-    def take_damage(self, damage) -> None:
+    def take_damage(self, damage, attacker) -> None:
         """
         Reduces the monster's health by the given amount.
+        Weakness and resistance checks are performed here.
 
         Args:
             damage (int): The amount of damage to be taken.
         """
+        # Check for weakness: multiply by the weakness value.
+        if self.card.weak_type == attacker.card.mana_type:
+            damage *= self.card.weak_mult
+
+        # Check for resistance: subtract by the resistance value
+        if self.card.resist_type == attacker.card.mana_type:
+            damage -= self.card.resist_val
+
+        # Apply damage
         self.health -= damage
 
     #! MANA METHODS

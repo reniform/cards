@@ -15,9 +15,9 @@ class Attack:
 
     def __init__(self, **kwargs) -> None:
         self.title = kwargs["title"]  # str
-        self.damage = kwargs["damage"]  # int
+        self.damage = int(kwargs["damage"])  # int
         self.cost = kwargs["cost"]  # dict: ManaType: int
-        # self.effects    = kwargs['effects']         # list: Effect
+        self.effects = kwargs["effects"]  # list: Effect
 
     def execute(self, attacker, target) -> None:
         """
@@ -33,7 +33,7 @@ class Attack:
             return
 
         # attacker.active_monster.spend_mana(self.cost)
-        target.active_monster.take_damage(self.damage)
+        target.active_monster.take_damage(self.damage, attacker.active_monster)
         print(f"{self.title} dealt {self.damage} damage!")
 
 

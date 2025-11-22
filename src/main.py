@@ -71,6 +71,7 @@ def main() -> None:
     # and fetch their full data from the database.
     player_deck_list = [
         "Bulbasaur", "Ivysaur", "Venusaur",  # Grass line
+        "Charmander", "Charmeleon", "Charizard",  # Fire line
         #"Potion", "Switch"  # Example utility cards (once implemented)
     ] * 4 # Multiply to get a larger deck
 
