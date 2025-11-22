@@ -172,10 +172,10 @@ class CardRepository:
             monster_kwargs = {
                 "title": card_data["title"],
                 "type": card_data["card_type"],
-                "stage": monster_data["stage"] if monster_data else None,
-                "health": monster_data["health"] if monster_data and monster_data.get("health") is not None else 0,
-                "retreat_val": monster_data["retreat_cost"] if monster_data and monster_data.get("retreat_cost") is not None else 0,
-                "level": pokedex_data.get("level"),
+                "stage": monster_data["stage"] if monster_data else None, # Safely access stage
+                "health": monster_data["health"] if monster_data else 0, # Safely access health
+                "retreat_val": monster_data["retreat_cost"] if monster_data else 0, # Safely access retreat_cost
+                "level": pokedex_data["level"] if pokedex_data else None, # Safely access level
                 "dex_data": dict(pokedex_data) if pokedex_data else {},
                 "mana_type": type_data[0]["mana_type"] if type_data else "COLORLESS",
                 "weak_type": weakness_data[0]["mana_type"] if weakness_data else None,

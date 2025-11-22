@@ -4,11 +4,13 @@ import colorlog
 
 from core.carddata import give_test_card
 from core.enums import CardType
+from core.card_factory import CardFactory
+from database.card_repository import CardRepository
 from core.game import GameState
-from models.mana import ManaCard, ManaTemplate
+#from models.mana import ManaCard, ManaTemplate
 from models.monster import MonsterCard, MonsterTemplate
 from models.player import PlayerUnit
-from models.utility import UtilityCard, UtilityTemplate
+#from models.utility import UtilityCard, UtilityTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -39,20 +41,19 @@ def generate_deck_from_list(deck_list, player_unit):
     Populates a player's card field from a list of card data.
     The list can contain either card data dictionaries or pre-instantiated card objects.
     """
+    card_repo = CardRepository()
     for card_data in deck_list:
-        # If the item is already a game-ready card instance, add it directly.
-        if isinstance(card_data, (MonsterCard, UtilityCard, ManaCard)):
-            player_unit.add_to_field(card_data)
-        # If it's a template object, wrap it in the appropriate card instance.
-        elif isinstance(card_data, MonsterTemplate):
-            player_unit.add_to_field(MonsterCard(card_data))
-        # Otherwise, assume it's a raw dictionary and build the card from scratch.
-        else:
-            card_type_str = card_data.get("type")
-            if card_type_str == "MONSTER" or (isinstance(card_type_str, CardType) and card_type_str == CardType.MONSTER):
-                template = MonsterTemplate(**card_data)
-                player_unit.add_to_field(MonsterCard(template))
-            # Add cases for UTILITY and MANA dicts here if needed.
+        title = card_data
+        set_code = "BS"  # Default set_code for test data
+        template = CardFactory.create_card_from_db(card_repo, title, set_code)
+
+        if not template:
+            logger.warning(f"Could not create card for {title} ({set_code})")
+            continue
+
+        if isinstance(template, MonsterTemplate):
+            player_unit.add_to_field(MonsterCard(template))
+        # Add cases for UTILITY and MANA here if needed.
 
 
 def main() -> None:
@@ -65,9 +66,17 @@ def main() -> None:
     player = PlayerUnit()
     opponent = PlayerUnit("Opponent")
 
+    # Define a specific deck list for the player for targeted testing.
+    # The `generate_deck_from_list` function will take these titles
+    # and fetch their full data from the database.
+    player_deck_list = [
+        "Bulbasaur", "Ivysaur", "Venusaur",  # Grass line
+        #"Potion", "Switch"  # Example utility cards (once implemented)
+    ] * 4 # Multiply to get a larger deck
+
     # 2. Generate and setup decks
-    generate_deck_from_list(give_test_card(100), player_unit=player)
-    generate_deck_from_list(give_test_card(100), player_unit=opponent)
+    generate_deck_from_list(player_deck_list, player_unit=player)
+    generate_deck_from_list(give_test_card(60), player_unit=opponent) # Opponent can still use a random deck
 
     player.initialize_deck()
     player.shuffle_deck()

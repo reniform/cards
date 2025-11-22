@@ -1,5 +1,6 @@
 from models.monster import MonsterTemplate
 from core.enums import CardType, ManaType, StageType
+from database.card_repository import CardRepository
 
 class CardFactory:
     """
@@ -39,15 +40,20 @@ class CardFactory:
         return MonsterTemplate(**kwargs)
     
     @classmethod
-    def create_card_from_db(cls, card_repo, title: str, set_code: str):
+    def create_card_from_db(cls, card_repo: CardRepository, title: str, set_code: str):
         """
         Creating a card template from a CardRepository (see card_repository.db).
         """
 
         # Assuming the repository will return a dict ...
-        card_data = card_repo.get_card_data_as_kwargs(title, set_code)
+        card_data = card_repo.get_card_data_as_kwargs(title=title, set_code=set_code)
+        if not card_data:
+            return None
 
-        if card_data and CardType(card_data.get("type")) == CardType.MONSTER:
+        card_type = CardType(card_data.get("type").lower())
+        if card_type == CardType.MONSTER:
             return cls.create_monster_template(**card_data)
-        else:
-            pass # INclude UTILITY and MANA logic.
+        elif card_type == CardType.UTILITY:
+            pass
+        elif card_type == CardType.MANA:
+            pass
