@@ -3,6 +3,8 @@ import random
 from typing import TYPE_CHECKING
 
 from core.enums import CardType, ManaType, StageType
+from models.monster import MonsterCard
+
 
 if TYPE_CHECKING:
     from models.monster import MonsterCard

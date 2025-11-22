@@ -110,6 +110,60 @@ class GameState:
         self.active_player = self.waiting_player
         self.turn_count += 1
 
+    def _handle_knockout(self, knocked_out_player: PlayerUnit):
+        """
+        Handles the entire sequence of a monster being knocked out.
+        """
+        # 1. Announce the knockout.
+        fainted_monster = knocked_out_player.active_monster
+        logger.info(f"{fainted_monster.title} for {knocked_out_player.title} has been knocked out!")
+
+        # 2. Move the fainted monster and all its attachments to the discard pile.
+        # Discard attached mana.
+        for mana_card in fainted_monster.attached_mana.values():
+            knocked_out_player.add_to_discard(mana_card)
+        # Discard prior evolutions.
+        for evo_card in fainted_monster.prior_evos:
+            knocked_out_player.add_to_discard(evo_card)
+        # Finally, discard the monster itself.
+        knocked_out_player.add_to_discard(fainted_monster)
+
+        # 3. Clear the active monster slot.
+        knocked_out_player.active_monster = None
+
+        # 4. The opponent takes a prize card.
+        # We will need a new command for the player to choose which prize card.
+        # For now, we'll log it and set a flag.
+        prize_taker = self.player1 if knocked_out_player is self.player2 else self.player2
+        logger.info(f"{prize_taker.title} gets to take a prize card!")
+        # TODO: Implement a "take_prize" command and a game state flag.
+        # For now, let's automatically take the first available prize for testing.
+        if prize_taker.prize:
+            first_prize_slot = next(iter(prize_taker.prize))
+            prize_taker.take_prize_card(first_prize_slot)
+
+        # 5. Check for win condition (no more prize cards).
+        if not prize_taker.prize:
+            logger.info(f"{prize_taker.title} has taken all their prize cards!")
+            print(f"Game over!!! {prize_taker.title} wins!")
+            os._exit(0)
+
+        # 6. The player with the knocked-out monster must promote a new one.
+        if not knocked_out_player.bench:
+            logger.info(f"{knocked_out_player.title} has no benched monsters to promote.")
+            print(f"Game over!!! {prize_taker.title} wins!")
+            os._exit(0)
+        else:
+            logger.info(f"{knocked_out_player.title} must choose a new active monster from their bench.")
+            # TODO: Force the player to use a "promote" command.
+
+    def check_knockouts(self):
+        """Checks both players for knocked out monsters."""
+        if self.player1.active_monster and self.player1.active_monster.health <= 0:
+            self._handle_knockout(self.player1)
+        if self.player2.active_monster and self.player2.active_monster.health <= 0:
+            self._handle_knockout(self.player2)
+
     def redraw_screen(self) -> None:
         # os.system("cls" if os.name == "nt" else "clear")
 
@@ -159,10 +213,5 @@ class GameState:
             else:
                 print("??? What???")
 
-            # PERFORM CHECKS
-            if (
-                self.waiting_player.active_monster
-                and self.waiting_player.active_monster.health <= 0
-            ):
-                print("You win!")
-                os._exit(1)
+            # 4. After any action, check for knockouts.
+            self.check_knockouts()

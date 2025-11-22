@@ -1,7 +1,5 @@
 import logging
 from effects.effects import EffectRegistry
-from core.game import GameState
-from models.player import PlayerUnit
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +27,7 @@ class Attack:
         ]
 
     def execute(
-        self, game_state: GameState, attacker: PlayerUnit, target: PlayerUnit
+        self, game_state, attacker, target
     ) -> None:
         """
         Executes the attack from player to player; performs the check for mana.
