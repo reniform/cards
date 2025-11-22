@@ -2,6 +2,7 @@ from models.monster import MonsterTemplate
 from core.enums import CardType, ManaType, StageType
 from database.card_repository import CardRepository
 
+
 class CardFactory:
     """
     This factory creates card template objects from raw kwargs data from the SQL
@@ -18,12 +19,14 @@ class CardFactory:
         # --- "type" to CardType ---
         type_str = kwargs.get("type", "monster")
         # Ensure we handle both string ("MONSTER") and enum (CardType.MONSTER) inputs safely.
-        kwargs["type"] = CardType(type_str.value if isinstance(type_str, CardType) else type_str.lower())
+        kwargs["type"] = CardType(
+            type_str.value if isinstance(type_str, CardType) else type_str.lower()
+        )
 
         # --- "stage" to StageType ---
         if "stage" in kwargs and isinstance(kwargs["stage"], str):
             kwargs["stage"] = StageType(kwargs["stage"].lower())
-        
+
         # -- "mana_type" to ManaType ---
         if "mana_type" in kwargs and isinstance(kwargs["mana_type"], str):
             kwargs["mana_type"] = ManaType(kwargs["mana_type"].lower())
@@ -44,7 +47,7 @@ class CardFactory:
 
         # See Attack class in combat.py for attack handling kwarg arguments.
         return MonsterTemplate(**kwargs)
-    
+
     @classmethod
     def create_card_from_db(cls, card_repo: CardRepository, title: str, set_code: str):
         """

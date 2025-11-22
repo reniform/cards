@@ -1,18 +1,15 @@
 from .connection import get_db_connection
-from models.monster import MonsterTemplate
-
-# from models.monster import AbilityTemplate # Uncomment when AbilityTemplate is created
-
-from core.enums import ManaType, StageType
+from core.enums import ManaType
 
 
 class CardRepository:
     """
     The repository for all database operations related to fetching and assembling card data.
     This class acts as a bridge between the raw database and the application's object models.
+    Data in `CardRepository` is handed off to `core/card_factory.py` to produce card objects.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the repository with a database connection."""
         self.conn = get_db_connection()
 
@@ -25,8 +22,7 @@ class CardRepository:
             set_code: The original set code of the card (e.g., "BS").
 
         Returns:
-            A fully populated MonsterTemplate, UtilityTemplate, or ManaTemplate object,
-            or None if the card is not found.
+            A dictionary of kwargs to be used by the card factory.
         """
         cursor = self.conn.cursor()
 
@@ -143,7 +139,7 @@ class CardRepository:
                 effect_data = cursor.fetchall()
 
                 abilities.append({"details": ability_row, "effects": effect_data})
-            
+
             # --- Step 5: Assemble the Template Object ---
             # With all the data now in memory, create an instance of MonsterTemplate
             # (or another template type) and populate it before returning.
@@ -157,9 +153,12 @@ class CardRepository:
                 attack_details = dict(attack["details"])
                 # Convert the list of cost dicts into a single dict mapping ManaType to quantity.
                 attack_details["cost"] = {
-                    ManaType(cost["mana_type"].lower()): cost["quantity"] for cost in attack["costs"]
+                    ManaType(cost["mana_type"].lower()): cost["quantity"]
+                    for cost in attack["costs"]
                 }
-                attack_details["effects"] = [dict(effect) for effect in attack["effects"]]
+                attack_details["effects"] = [
+                    dict(effect) for effect in attack["effects"]
+                ]
                 attack_kwargs_list.append(attack_details)
 
             # TODO: Process abilities into AbilityTemplate objects once the class is created.
@@ -172,17 +171,31 @@ class CardRepository:
             monster_kwargs = {
                 "title": card_data["title"],
                 "type": card_data["card_type"],
-                "stage": monster_data["stage"] if monster_data else None, # Safely access stage
-                "health": monster_data["health"] if monster_data else 0, # Safely access health
-                "retreat_val": monster_data["retreat_cost"] if monster_data else 0, # Safely access retreat_cost
-                "level": pokedex_data["level"] if pokedex_data else None, # Safely access level
+                "stage": monster_data["stage"]
+                if monster_data
+                else None,  # Safely access stage
+                "health": monster_data["health"]
+                if monster_data
+                else 0,  # Safely access health
+                "retreat_val": monster_data["retreat_cost"]
+                if monster_data
+                else 0,  # Safely access retreat_cost
+                "level": pokedex_data["level"]
+                if pokedex_data
+                else None,  # Safely access level
                 "dex_data": dict(pokedex_data) if pokedex_data else {},
                 "mana_type": type_data[0]["mana_type"] if type_data else "COLORLESS",
                 "weak_type": weakness_data[0]["mana_type"] if weakness_data else None,
                 "weak_mult": weakness_data[0]["modifier"] if weakness_data else None,
-                "resist_type": resistance_data[0]["mana_type"] if resistance_data else None,
-                "resist_val": resistance_data[0]["modifier"] if resistance_data else None,
-                "evolve_from": evolution_data[0]["evolves_from_name"] if evolution_data else None,
+                "resist_type": resistance_data[0]["mana_type"]
+                if resistance_data
+                else None,
+                "resist_val": resistance_data[0]["modifier"]
+                if resistance_data
+                else None,
+                "evolve_from": evolution_data[0]["evolves_from_name"]
+                if evolution_data
+                else None,
                 "abilities": abilities,
                 "attacks": attack_kwargs_list,
             }

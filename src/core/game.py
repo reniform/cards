@@ -4,6 +4,7 @@ import os
 import colorful as cf
 
 from core.rules import RulesEngine
+from src.main import PlayerUnit
 from termio.commands import CommandHandler
 from termio.view import TerminalView
 from core.coins import coin
@@ -26,7 +27,8 @@ class GameState:
         """A property to easily get the player who is not active."""
         return self.player2 if self.active_player is self.player1 else self.player1
 
-    def get_legal_actions(self, player):
+    def get_legal_actions(self, player: PlayerUnit) -> list:
+        """Retrieves the list of legal actions from the rules engine (see rules.py)."""
         return RulesEngine.get_legal_actions(self, player)
 
     def next_turn(self) -> None:
@@ -36,7 +38,7 @@ class GameState:
         """
         # Swap the active player.
         # TODO: IMPLEMENT SWITCH FOR SINGLE OR MULTI ONCE HEURISTICS MODEL IS UP
-        
+
         # Reset monster card flags.
         if self.active_player.active_monster:
             self.active_player.active_monster.has_attacked = False
@@ -55,31 +57,55 @@ class GameState:
         # Check for status conditions
         if self.active_player.active_monster:
             if "POISONED" in self.active_player.active_monster.special_conditions:
-                logger.info(f"Adding 10 damage for POISONED {self.active_player.active_monster}")
+                logger.info(
+                    f"Adding 10 damage for POISONED {self.active_player.active_monster}"
+                )
                 self.active_player.active_monster.take_damage(10)
             if "POISONED_20" in self.active_player.active_monster.special_conditions:
-                logger.info(f"Adding 20 damage for badly POISONED {self.active_player.active_monster}")
+                logger.info(
+                    f"Adding 20 damage for badly POISONED {self.active_player.active_monster}"
+                )
                 self.active_player.active_monster.take_damage(20)
             if "BURNED" in self.active_player.active_monster.special_conditions:
-                logger.info(f"Adding 20 damage for BURNED {self.active_player.active_monster}")
+                logger.info(
+                    f"Adding 20 damage for BURNED {self.active_player.active_monster}"
+                )
                 self.active_player.active_monster.take_damage(20)
-                logger.info(f"Flipping a coin for BURNED {self.active_player.active_monster}")
+                logger.info(
+                    f"Flipping a coin for BURNED {self.active_player.active_monster}"
+                )
                 if coin():
-                    logger.info(f"HEADS {self.active_player.active_monster} has recovered from BURNED.")
-                    self.active_player.active_monster.special_conditions.remove("BURNED")
+                    logger.info(
+                        f"HEADS {self.active_player.active_monster} has recovered from BURNED."
+                    )
+                    self.active_player.active_monster.special_conditions.remove(
+                        "BURNED"
+                    )
                 else:
-                    logger.info(f"TAILS: {self.active_player.active_monster} remains BURNED.")
+                    logger.info(
+                        f"TAILS: {self.active_player.active_monster} remains BURNED."
+                    )
             if "ASLEEP" in self.active_player.active_monster.special_conditions:
-                logger.info(f"Flipping a coin for ASLEEP {self.active_player.active_monster}")
+                logger.info(
+                    f"Flipping a coin for ASLEEP {self.active_player.active_monster}"
+                )
                 if coin():
-                    logger.info(f"HEADS: {self.active_player.active_monster} has recovered from ASLEEP.")
-                    self.active_player.active_monster.special_conditions.remove("ASLEEP")
+                    logger.info(
+                        f"HEADS: {self.active_player.active_monster} has recovered from ASLEEP."
+                    )
+                    self.active_player.active_monster.special_conditions.remove(
+                        "ASLEEP"
+                    )
                 else:
-                    logger.info(f"TAILS: {self.active_player.active_monster} remains ASLEEP.")
+                    logger.info(
+                        f"TAILS: {self.active_player.active_monster} remains ASLEEP."
+                    )
             if "PARALYZED" in self.active_player.active_monster.special_conditions:
-                logger.info(f"Removing PARALYZED from {self.active_player.active_monster}")
+                logger.info(
+                    f"Removing PARALYZED from {self.active_player.active_monster}"
+                )
                 self.active_player.active_monster.special_conditions.remove("PARALYZED")
-                
+
         # Perform the player switch.
         self.active_player = self.waiting_player
         self.turn_count += 1
