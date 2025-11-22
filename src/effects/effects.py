@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
+
+from colorful.core import translate_style
 logger = logging.getLogger(__name__)
 
 class Effect(ABC):
@@ -20,7 +22,7 @@ class Effect(ABC):
         self._raw_data = kwargs
 
     @abstractmethod
-    def execute(self, game_state, source_card, target_player):
+    def execute(self, game_state, source_player, target_player):
         """Overriden in subclasses. Returns a modified game_state."""
         raise NotImplementedError
 
@@ -65,10 +67,40 @@ class DrawEffect(Effect):
         super().__init__(**kwargs)
         self.amount = self.value or 1  # Use 'value' from DB
 
-    def execute(self, game_state, source_card, target_player):
+    def execute(self, game_state, source_player, target_player):
         target_player.draw_from_deck(self.amount)
         # no return: player modified directly
 
 @EffectRegistry.register("APPLY_STATUS")
 class ApplyStatusEffect(Effect):
-    pass
+    def execute(self, game_state, source_player, target_player):
+        pass
+
+@EffectRegistry.register("HEAL")
+class HealEffect(Effect):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        try:
+            self.heal_amount = int(self.value)
+        except ValueError:
+            logger.error(f"Invalid heal 'value' for HealEffect: {self.value}")
+            self.heal_amount = 0
+
+    def execute(self, game_state, source_player, target_player):
+        if self.heal_amount <= 0:
+            return
+        
+        # Resolve targets
+        target_monster = None
+        if self.target == "SELF":
+            target_monster = source_player.active_monster
+        elif self.target == "TARGET":
+            target_monster = target_player.active_monster
+        
+        if not target_monster:
+            logger.warning(f"HealEffect: Could not find a valid monster for target '{self.target}'.")
+            return
+        
+        # Apply the heal, but only up to its max health.
+        target_monster.health = min(target_monster.card.health, target_monster.health + self.heal_amount)
+        logger.info(f"Healed {target_monster.title} for {self.heal_amount} HP.")

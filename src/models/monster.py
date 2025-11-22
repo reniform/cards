@@ -114,18 +114,19 @@ class MonsterCard(CardTemplate):
         """Returns the title from the card template."""
         return self.card.title
 
-    def use_attack(self, attack_index, player, target) -> bool:
+    def use_attack(self, attack_index, game_state, player, target) -> bool:
         """Performs attack from the given index. Attacks take the form of dicts and are kept in a list.
         See the `Attack` class docstring for more info on attack execution.
 
         Args:
             attack_index (int): The numeric index of the attack.
+            game_state (GameState): The current state of the game.
             player (PlayerUnit): The player with the monster performing the attack.
             target (PlayerUnit): The player with the monster receiving the attack.
         """
         if 0 <= attack_index < len(self.card.attacks):
             attack = self.card.attacks[attack_index]
-            attack.execute(player, target)
+            attack.execute(game_state, player, target)
             return True
         else:
             print(
@@ -133,21 +134,14 @@ class MonsterCard(CardTemplate):
             )
             return False
 
-    def take_damage(self, damage, attacker) -> None:
+    def take_damage(self, damage) -> None:
         """
         Reduces the monster's health by the given amount.
-        Weakness and resistance checks are performed here.
+        Weakness and resistance checks performed in the Attack class.
 
         Args:
             damage (int): The amount of damage to be taken.
         """
-        # Check for weakness: multiply by the weakness value.
-        if self.card.weak_type == attacker.card.mana_type:
-            damage *= self.card.weak_mult
-
-        # Check for resistance: subtract by the resistance value
-        if self.card.resist_type == attacker.card.mana_type:
-            damage -= self.card.resist_val
 
         # Apply damage
         self.health -= damage

@@ -2,8 +2,10 @@ import os
 from core.enums import CardType
 from core.carddata import give_test_card
 from core.rules import RulesEngine
-from termio.view import TerminalView
+from termio.view import TerminalView, ManaColor
 from models.monster import MonsterCard
+from models.utility import UtilityCard
+from models.mana import ManaCard
 import logging
 
 logger = logging.getLogger(__name__)
@@ -126,7 +128,7 @@ class CommandHandler:
 
         # 3. Execute the attack.
         success = game_state.active_player.active_monster.use_attack(
-            attack_index, game_state.active_player, game_state.waiting_player
+            attack_index, game_state, game_state.active_player, game_state.waiting_player
         )
         if success:
             print(f"{game_state.active_player.title}'s turn has ended.")
@@ -196,56 +198,82 @@ class CommandHandler:
         success = game_state.active_player.evolve_monster(evo_card_id, base_monster_id)
         return (False, success)  # Redraw on success, but don't end turn
 
-    def handle_inspect(game_state, card_id_str: str):
+    @staticmethod
+    def handle_inspect(game_state, *args):
         """
         Inspects a card on the field or in hand to see its detailed stats.
-        This is a debug command.
         Usage: inspect <card_id>
         """
+        if not args:
+            print("Usage: inspect <card_id>")
+            return False, False
+
         try:
-            card_id = int(card_id_str)
+            card_id = int(args[0])
         except (ValueError, IndexError):
             print("Usage: inspect <card_id>")
             return False, False  # Turn not ended, no redraw needed
 
         card_to_inspect = None
-        player = game_state.active_player
 
-        # Search for the card in the active player's hand, bench, and active slot
-        if card_id in player.hand:
-            card_to_inspect = player.hand[card_id]
-        elif player.active_monster and player.active_monster.id == card_id:
-            card_to_inspect = player.active_monster
-        elif card_id in player.bench:
-            card_to_inspect = player.bench[card_id]
+        # Search all players and all zones for the card
+        for p in [game_state.active_player, game_state.waiting_player]:
+            if card_id in p.hand:
+                card_to_inspect = p.hand[card_id]
+                break
+            if p.active_monster and p.active_monster.id == card_id:
+                card_to_inspect = p.active_monster
+                break
+            if card_id in p.bench:
+                card_to_inspect = p.bench[card_id]
+                break
 
         if not card_to_inspect:
-            print(f"Card with ID {card_id} not found for active player.")
+            print(f"Card with ID {card_id} not found on the field.")
             return False, False
 
-        # We only know how to inspect monsters for now
-        if not isinstance(card_to_inspect, MonsterCard):
-            print(f"'{card_to_inspect.title}' is not a monster. Inspection not supported for this card type yet.")
-            return False, False
+        # --- MonsterCard Inspection ---
+        if isinstance(card_to_inspect, MonsterCard):
+            card = card_to_inspect.card  # This is the MonsterTemplate
+            print("\n" + "="*20 + f" Inspecting: {card.title} (ID: {card_to_inspect.id}) " + "="*20)
+            print(f"  - Type: {card.mana_type} | Stage: {card.stage.value} | HP: {card_to_inspect.health}/{card.health}")
+            print(f"  - Evolves From: {card.evolve_from or 'N/A'}")
+            print(f"  - Weakness: {card.weak_type or 'N/A'} (x{card.weak_mult or '0'})")
+            print(f"  - Resistance: {card.resist_type or 'N/A'} (-{card.resist_val or '0'})")
+            print(f"  - Retreat Cost: {card.retreat_val}")
+            print("\n  --- Attacks ---")
+            if card.attacks:
+                for i, attack in enumerate(card.attacks):
+                    cost_str = ", ".join([f"{quantity} {mana_type.name}" for mana_type, quantity in attack.cost.items()])
+                    print(f"    {i}: {attack.title} | Damage: {attack.damage} | Cost: [{cost_str}]")
+                    if attack.effects:
+                        print(f"       {attack.description}")
+                        print(f"       Effects: {attack.effects!r}")
+            else:
+                print("    - No attacks.")
 
-        # --- Print Detailed Stats ---
-        card = card_to_inspect.card  # This is the MonsterTemplate
-        print("\n" + "="*20 + f" Inspecting: {card.title} (ID: {card_to_inspect.id}) " + "="*20)
-        print(f"  - Type: {card.mana_type} ({type(card.mana_type)})")
-        print(f"  - Stage: {card.stage.value} | HP: {card.health}")
-        print(f"  - Evolves From: {card.evolve_from}")
-        print(f"  - Weakness: {card.weak_type} (x{card.weak_mult})")
-        print(f"  - Resistance: {card.resist_type} (-{card.resist_val})")
-        print(f"  - Retreat Cost: {card.retreat_val}")
-        print("\n  --- Attacks ---")
-        if card.attacks:
-            for attack in card.attacks:
-                cost_str = ", ".join([f"{quantity} {mana_type.name.upper()}" for mana_type, quantity in attack.cost.items()])
-                print(f"    - {attack.title}: Damage {attack.damage}, Cost: [{cost_str}]")
+        # --- UtilityCard Inspection ---
+        elif isinstance(card_to_inspect, UtilityCard):
+            card = card_to_inspect.card
+            print("\n" + "="*20 + f" Inspecting: {card.title} (ID: {card_to_inspect.id}) " + "="*20)
+            print(f"  - Type: {card.type.value}")
+            print(f"  - Description: {card.descrpition}")
+            if card_to_inspect.effects:
+                print(f"  - Effects: {card_to_inspect.effects!r}")
+
+        # --- ManaCard Inspection ---
+        elif isinstance(card_to_inspect, ManaCard):
+            card = card_to_inspect.card
+            print("\n" + "="*20 + f" Inspecting: {card.title} (ID: {card_to_inspect.id}) " + "="*20)
+            print(f"  - Type: {card.type.value}")
+            print(f"  - Mana Type: {card.mana_type.name}")
+            print(f"  - Mana Value: {card.mana_val}")
+
         else:
-            print("    - No attacks.")
-        print("="* (42 + len(card.title) + len(str(card_to_inspect.id))) + "\n")
-        
+            print(f"Inspection not fully supported for card type: {type(card_to_inspect)}.")
+
+        print("="* (42 + len(card_to_inspect.title) + len(str(card_to_inspect.id))) + "\n")
+
         # This command does not end the turn or require a full redraw.
         # We just print info and let the player take another action.
         input("(press enter to continue)")
