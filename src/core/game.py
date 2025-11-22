@@ -6,6 +6,7 @@ import colorful as cf
 from core.rules import RulesEngine
 from termio.commands import CommandHandler
 from termio.view import TerminalView
+from core.coins import coin
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,7 @@ class GameState:
         """
         # Swap the active player.
         # TODO: IMPLEMENT SWITCH FOR SINGLE OR MULTI ONCE HEURISTICS MODEL IS UP
-        self.active_player = self.waiting_player
-        self.turn_count += 1
-
+        
         # Reset monster card flags.
         if self.active_player.active_monster:
             self.active_player.active_monster.has_attacked = False
@@ -52,6 +51,38 @@ class GameState:
         # The new active player draws a card.
         if len(self.active_player.deck) > 0:
             self.active_player.draw_from_deck(1)
+
+        # Check for status conditions
+        if self.active_player.active_monster:
+            if "POISONED" in self.active_player.active_monster.special_conditions:
+                logger.info(f"Adding 10 damage for POISONED {self.active_player.active_monster}")
+                self.active_player.active_monster.take_damage(10)
+            if "POISONED_20" in self.active_player.active_monster.special_conditions:
+                logger.info(f"Adding 20 damage for badly POISONED {self.active_player.active_monster}")
+                self.active_player.active_monster.take_damage(20)
+            if "BURNED" in self.active_player.active_monster.special_conditions:
+                logger.info(f"Adding 20 damage for BURNED {self.active_player.active_monster}")
+                self.active_player.active_monster.take_damage(20)
+                logger.info(f"Flipping a coin for BURNED {self.active_player.active_monster}")
+                if coin():
+                    logger.info(f"HEADS {self.active_player.active_monster} has recovered from BURNED.")
+                    self.active_player.active_monster.special_conditions.remove("BURNED")
+                else:
+                    logger.info(f"TAILS: {self.active_player.active_monster} remains BURNED.")
+            if "ASLEEP" in self.active_player.active_monster.special_conditions:
+                logger.info(f"Flipping a coin for ASLEEP {self.active_player.active_monster}")
+                if coin():
+                    logger.info(f"HEADS: {self.active_player.active_monster} has recovered from ASLEEP.")
+                    self.active_player.active_monster.special_conditions.remove("ASLEEP")
+                else:
+                    logger.info(f"TAILS: {self.active_player.active_monster} remains ASLEEP.")
+            if "PARALYZED" in self.active_player.active_monster.special_conditions:
+                logger.info(f"Removing PARALYZED from {self.active_player.active_monster}")
+                self.active_player.active_monster.special_conditions.remove("PARALYZED")
+                
+        # Perform the player switch.
+        self.active_player = self.waiting_player
+        self.turn_count += 1
 
     def redraw_screen(self) -> None:
         # os.system("cls" if os.name == "nt" else "clear")

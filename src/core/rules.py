@@ -222,12 +222,12 @@ class RulesEngine:
             return (False, f"{player.title} cannot attack on their first turn.")
 
         # Check for special conditions that prevent attacking.
-        if "sleep" in attacker.special_conditions:
+        if "ASLEEP" in attacker.special_conditions:
             return (
                 False,
                 f"{player.title}'s active monster is Asleep and cannot attack.",
             )
-        if "paralyzed" in attacker.special_conditions:
+        if "PARALYZED" in attacker.special_conditions:
             return (
                 False,
                 f"{player.title}'s active monster is Paralyzed and cannot attack.",
@@ -480,6 +480,18 @@ class RulesEngine:
             return (
                 False,
                 f"Not enough mana to pay retreat cost for '{player.active_monster.title}'.",
+            )
+        
+        # 5. Check for special conditions that prevent retreating.
+        if "ASLEEP" in player.active_monster.special_conditions:
+            return (
+                False,
+                f"{player.title}'s active monster is Asleep and cannot retreat.",
+            )
+        if "PARALYZED" in player.active_monster.special_conditions:
+            return (
+                False,
+                f"{player.title}'s active monster is Paralyzed and cannot retreat.",
             )
 
         # All checks pass! The action is legal.
