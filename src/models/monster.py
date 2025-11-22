@@ -108,6 +108,7 @@ class MonsterCard(CardTemplate):
         self.has_attacked = False
         self.has_attached = False
         self.has_evolved = False
+        self.is_immune = False
 
     @property
     def title(self):

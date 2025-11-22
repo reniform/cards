@@ -80,9 +80,14 @@ class TerminalView:
             padded_id = f"{monster.id:03d}"
             title = f"{monster.title:<12}"
             health = f"{monster.health:3d}/{monster.card.health:3d}"
+            
+            status_string = ""
+            if monster.special_conditions:
+                status_string = f" {cf.bold_red}({','.join(monster.special_conditions.keys())}){cf.reset}"
+
             mana_pool = TerminalView.get_mana_pool_string(monster)
 
-            monster_str = f"[{cf.darkSlateGray}{padded_id}{cf.reset}] {ManaColor[monster.card.mana_type.name].value}{title}{cf.reset} HP:{health} {mana_pool}"
+            monster_str = f"[{cf.darkSlateGray}{padded_id}{cf.reset}] {ManaColor[monster.card.mana_type.name].value}{title}{cf.reset} HP:{health}{status_string} {mana_pool}"
             monster_strings.append(monster_str)
 
         # Now, group these strings into lines, with up to 3 monsters per line.
@@ -120,15 +125,18 @@ class TerminalView:
         # The player's active monster health and max health.
         active_mon_health = f"{player.active_monster.health:3d}"
         active_mon_max_health = f"{player.active_monster.card.health:3d}"
-        # The player's status
-        # TODO IMPLEMENT STATUS EFFECTS
+        
+        status_string = ""
+        if player.active_monster.special_conditions:
+            statuses = list(player.active_monster.special_conditions.keys())
+            status_string = f" {cf.bold_red}({','.join(statuses)}){cf.reset}"
 
         parts = [
             "\t",
             f"{ManaColor[player.active_monster.card.mana_type.name].value}{active_mon_mana_type}{cf.reset}",
             f"{active_mon_stage} [{cf.darkSlateGray}{padded_id}{cf.reset}]",
             f"{ManaColor[player.active_monster.card.mana_type.name].value}{cf.bold if Bold else ''}{active_mon_title}{cf.reset}",
-            f"{active_mon_health}/{active_mon_max_health}",
+            f"{active_mon_health}/{active_mon_max_health}{status_string}",
             f"{TerminalView.get_mana_pool_string(player.active_monster)}",
         ]
         main_line = " ".join(parts)
