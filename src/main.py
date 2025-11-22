@@ -61,7 +61,7 @@ def main() -> None:
     Main entry point for the application. Sets up the game and starts the engine.
     """
     setup_logging()
-    logger.info("Starting cards!")
+    logger.info("starting blackstar! v0.1.0")
     # 1. Create players
     player = PlayerUnit()
     opponent = PlayerUnit("Opponent")
