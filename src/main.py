@@ -40,21 +40,19 @@ def generate_deck_from_list(deck_list, player_unit):
     The list can contain either card data dictionaries or pre-instantiated card objects.
     """
     for card_data in deck_list:
-        # If the item is already a fully formed card object, add it directly.
+        # If the item is already a game-ready card instance, add it directly.
         if isinstance(card_data, (MonsterCard, UtilityCard, ManaCard)):
             player_unit.add_to_field(card_data)
-        # Otherwise, assume it's a dictionary and build the card from a template.
+        # If it's a template object, wrap it in the appropriate card instance.
+        elif isinstance(card_data, MonsterTemplate):
+            player_unit.add_to_field(MonsterCard(card_data))
+        # Otherwise, assume it's a raw dictionary and build the card from scratch.
         else:
-            match card_data.get("type"):
-                case CardType.MONSTER:
-                    template = MonsterTemplate(**card_data)
-                    player_unit.add_to_field(MonsterCard(template))
-                case CardType.UTILITY:
-                    template = UtilityTemplate(**card_data)
-                    player_unit.add_to_field(UtilityCard(template))
-                case CardType.MANA:
-                    template = ManaTemplate(**card_data)
-                    player_unit.add_to_field(ManaCard(template))
+            card_type_str = card_data.get("type")
+            if card_type_str == "MONSTER" or (isinstance(card_type_str, CardType) and card_type_str == CardType.MONSTER):
+                template = MonsterTemplate(**card_data)
+                player_unit.add_to_field(MonsterCard(template))
+            # Add cases for UTILITY and MANA dicts here if needed.
 
 
 def main() -> None:

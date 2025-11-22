@@ -3,7 +3,6 @@ from models.monster import MonsterTemplate
 
 # from models.monster import AbilityTemplate # Uncomment when AbilityTemplate is created
 
-from core.combat import Attack
 from core.enums import ManaType, StageType
 
 
@@ -17,7 +16,7 @@ class CardRepository:
         """Initializes the repository with a database connection."""
         self.conn = get_db_connection()
 
-    def get_card_by_title_and_set(self, title: str, set_code: str):
+    def get_card_data_as_kwargs(self, title: str, set_code: str) -> dict | None:
         """
         Fetches all data for a single conceptual card and assembles it into a template object.
 
@@ -170,45 +169,22 @@ class CardRepository:
             #     ... create AbilityTemplate objects ...
             #     ability_templates.append(ability_template)
 
-            monster_template = MonsterTemplate(
-                # --- Basic card info from `card_data` ---
-                title=card_data["title"],
-                type=card_data["card_type"],
-                # subtype=card_data["subtype"], # Not used in MonsterTemplate constructor
-                # --- Monster data from `monster_data` ---
-                stage=StageType(monster_data["stage"].lower()),
-                health=monster_data["health"],
-                retreat_val=monster_data["retreat_cost"],
-                # --- Dex data from `pokedex_entries` ---
-                level=pokedex_data["level"],
-                dex_data={
-                    "dex_number": pokedex_data["dex_number"],
-                    "species": pokedex_data["species"],
-                    "height_ft_in": pokedex_data["height_ft_in"],
-                    "height_m": pokedex_data["height_m"],
-                    "weight_lbs": pokedex_data["weight_lbs"],
-                    "weight_kg": pokedex_data["weight_kg"],
-                    "dex_entry": pokedex_data["dex_entry"],
-                },
-                # -- Mana data from `monster_types` (implement dual types here later)
-                mana_type=ManaType(type_data[0]["mana_type"].lower() if type_data else None),
-                # -- Weakness data from `monster_weaknesses`
-                weak_type=ManaType(weakness_data[0]["mana_type"].lower())
-                if weakness_data
-                else None,
-                weak_mult=weakness_data[0]["modifier"] if weakness_data else None,
-                # -- Resistance data from `monster_resistances`
-                resist_type=ManaType(resistance_data[0]["mana_type"].lower())
-                if resistance_data
-                else None,
-                resist_val=resistance_data[0]["modifier"] if resistance_data else None,
-                # -- Evolution data from `monster_evolutions`
-                evolve_from=evolution_data[0]["evolves_from_name"]
-                if evolution_data
-                else None,
-                # -- Ability and Attack data
-                abilities=abilities,
-                attacks=attack_kwargs_list,
-            )
+            monster_kwargs = {
+                "title": card_data["title"],
+                "type": card_data["card_type"],
+                "stage": monster_data["stage"] if monster_data else None,
+                "health": monster_data["health"] if monster_data and monster_data.get("health") is not None else 0,
+                "retreat_val": monster_data["retreat_cost"] if monster_data and monster_data.get("retreat_cost") is not None else 0,
+                "level": pokedex_data.get("level"),
+                "dex_data": dict(pokedex_data) if pokedex_data else {},
+                "mana_type": type_data[0]["mana_type"] if type_data else "COLORLESS",
+                "weak_type": weakness_data[0]["mana_type"] if weakness_data else None,
+                "weak_mult": weakness_data[0]["modifier"] if weakness_data else None,
+                "resist_type": resistance_data[0]["mana_type"] if resistance_data else None,
+                "resist_val": resistance_data[0]["modifier"] if resistance_data else None,
+                "evolve_from": evolution_data[0]["evolves_from_name"] if evolution_data else None,
+                "abilities": abilities,
+                "attacks": attack_kwargs_list,
+            }
 
-            return monster_template
+            return monster_kwargs
