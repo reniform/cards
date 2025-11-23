@@ -63,8 +63,8 @@ def main() -> None:
     setup_logging()
     logger.info("starting blackstar! v0.1.0")
     # 1. Create players
-    player = PlayerUnit()
-    opponent = PlayerUnit("Opponent")
+    player = PlayerUnit(title="Player")
+    opponent = PlayerUnit(title="Opponent")
 
     # Define a specific deck list for the player for targeted testing.
     # The `generate_deck_from_list` function will take these titles
@@ -72,10 +72,9 @@ def main() -> None:
     player_deck_list = [
         "Bulbasaur", "Ivysaur", "Venusaur",  # Grass line
         "Charmander", "Charmeleon", "Charizard",  # Fire line
-        #"Potion", "Switch"  # Example utility cards (once implemented)
-    ] * 4 # Multiply to get a larger deck
+    ] * 4
 
-    # Generate and setup decks
+    # Generate and setup decks.
     generate_deck_from_list(player_deck_list, player_unit=player)
     generate_deck_from_list(give_test_card(60), player_unit=opponent) # Opponent can still use a random deck
 
@@ -84,11 +83,9 @@ def main() -> None:
     opponent.initialize_deck()
     opponent.shuffle_deck()
 
-    # Draw prize cards.
     player.set_prize_cards(6)
     opponent.set_prize_cards(6)
 
-    # Draw starting hands.
     player.draw_from_deck(7)
     opponent.draw_from_deck(7)
 
@@ -109,7 +106,6 @@ def main() -> None:
     for card_id, card in opponent.hand.items():
         if card.card.type == CardType.MONSTER:
             opponent.set_active_monster(card_id)
-            # This break ensures we only activate the first monster found.
             break
 
     # Create and run the game state.

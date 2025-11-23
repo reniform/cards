@@ -7,46 +7,44 @@ logger = logging.getLogger(__name__)
 
 
 class RulesEngine:
+    """
+    Handles all action validation according to the game's rules.
+    * **Validation methods** consider the game state and either return `True`, or `False` with an error message.
+    * **Get-action methods** return a list of all possible actions of a certain type and their potential targets.
+    """
+
     @staticmethod
     def get_legal_actions(game_state, player) -> list:
         """
-        Constructs a list of all valid actions a player can take.
+        Constructs a list of all permissible actions allowed to be taken by a player
+        throughout the course of their turn. This list is assembled from the get-action
+        methods, who perform validation checks on actions to be performed by the player
+        and return a list of legal actions with plausible targets.
         """
         legal_actions = []
 
-        # --- Check: Can the player PASS? ---
-        # (Almost always yes during their turn.)
+        # The player can pass at any time.
         legal_actions.append({"type": "PASS"})
         logger.debug(f"Legal action approved: PASS for {player.title}")
 
-        # --- Check: Can the player ATTACK? ---
-        # Player who goes first cannot attack on their first turn (turn_count == 1).
-        # For target discovery, see get_valid_targets() below.
         attack_actions = RulesEngine._get_attack_actions(game_state, player)
         legal_actions.extend(attack_actions)
 
-        # --- Check: Can the player ACTIVATE a monster? ---
         activate_actions = RulesEngine._get_activate_actions(game_state, player)
         legal_actions.extend(activate_actions)
 
-        #  --- Check: Can the player ATTACH mana?
-        # The rule is one mana attachment per turn.
         attach_actions = RulesEngine._get_attach_actions(game_state, player)
         legal_actions.extend(attach_actions)
 
-        # --- Check: Can the player BENCH a monster? ---
         bench_actions = RulesEngine._get_bench_actions(game_state, player)
         legal_actions.extend(bench_actions)
 
-        # --- Check: Can the player EVOLVE a monster? ---
         evolve_actions = RulesEngine._get_evolve_actions(game_state, player)
         legal_actions.extend(evolve_actions)
 
-        # --- Check: Can the player RETREAT their active monster? ---
         retreat_actions = RulesEngine._get_retreat_actions(game_state, player)
         legal_actions.extend(retreat_actions)
 
-        # --- Check: Can the player USE a utility card? ---
         use_actions = RulesEngine._get_use_actions(game_state, player)
         legal_actions.extend(use_actions)
 
@@ -61,7 +59,7 @@ class RulesEngine:
         game_state, player, card_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific activate action is legal, returning a reason for failure.
+        Validates if a specific ACTIVATE action is legal. If not, a reason is provided.
         """
         # Check if there is already an active monster.
         if player.active_monster:
@@ -93,12 +91,10 @@ class RulesEngine:
     def _get_activate_actions(game_state, player) -> list:
         """
         Generates a list of legal ACTIVATE actions.
-        An ACTIVATE action is possible if the player has no active monster
-        and has a Basic Monster in their hand.
         """
         actions = []
 
-        # For each card in hand, ask the "judge" if it's a legal activation.
+        # For each card in hand, ask whether it can be validly activated.
         for card in player.hand.values():
             is_legal, _ = RulesEngine._validate_activate_action(
                 game_state, player, card.id
@@ -120,16 +116,16 @@ class RulesEngine:
         game_state, player, mana_card_id: int, target_monster_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific attach action is legal, returning a reason for failure.
+        Validates if a specific ATTACH action is legal. If not, a reason is provided.
         """
-        # 1. Validate the mana card.
+        # Validate the mana card.
         mana_card = player.hand.get(mana_card_id)
         if not mana_card:
             return (False, f"Card with ID {mana_card_id} not found in your hand.")
         if mana_card.card.type != CardType.MANA:
             return (False, f"Card '{mana_card.title}' is not a mana card.")
 
-        # 2. Validate the target monster.
+        # Validate the target monster.
         target_monster = None
         if player.active_monster and player.active_monster.id == target_monster_id:
             target_monster = player.active_monster
@@ -142,7 +138,7 @@ class RulesEngine:
                 f"Target monster with ID {target_monster_id} not found on your field.",
             )
 
-        # 3. Check the "one attachment per monster per turn" rule.
+        # Check whether the monster has already received a mana card that turn.
         if target_monster.has_attached:
             return (
                 False,
@@ -156,22 +152,19 @@ class RulesEngine:
     def _get_attach_actions(game_state, player) -> list:
         """
         Generates a list of legal ATTACH actions.
-        An ATTACH action is possible if the player has a monster to attach
-        a mana card to, with one mana attachment per monster allowed.
-        The player can only attach one mana card per monster per turn.
         """
         actions = []
-        # 1. Identify all potential mana cards to attach.
+        # Identify all potential mana cards to attach.
         mana_in_hand = [
             card for card in player.hand.values() if card.card.type == CardType.MANA
         ]
 
-        # 2. Identify all potential monster targets on the field.
+        # Identify all potential monster targets on the field.
         monsters_on_field = (
             [player.active_monster] if player.active_monster else []
         ) + list(player.bench.values())
 
-        # 3. For every combination, ask the "judge" if the action is legal.
+        # 3. For every combination, ask whether the mana attachment is plausible.
         for mana_card in mana_in_hand:
             for target_monster in monsters_on_field:
                 is_legal, _ = RulesEngine._validate_attach_action(
@@ -194,16 +187,7 @@ class RulesEngine:
         game_state, player, attack_index: int, target_monster_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific attack action is legal, returning a reason for failure.
-
-        Args:
-            game_state (GameState): The current state of the game.
-            player (PlayerUnit): The player attempting the action.
-            attack_index (int): The index of the attack being used.
-            target_monster_id (int): The ID of the monster being targeted.
-
-        Returns:
-            A tuple of (bool, str | None): (True, None) if legal, (False, "reason") if illegal.
+        Validates if a specific ATTACK action is legal. If not, a reason is provided.
         """
         attacker = player.active_monster
         # Check for the active monster.
@@ -309,7 +293,7 @@ class RulesEngine:
         game_state, player, card_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific bench option is legal, returning a reason for failure.
+        Validates if a specific BENCH action is legal. If not, a reason is provided.
         """
         card_to_bench = player.hand.get(card_id)
         # 1. Validate the monster card.
@@ -369,7 +353,7 @@ class RulesEngine:
         game_state, player, evo_card_id: int, base_monster_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific evolve action is legal, returning a reason for failure.
+        Validates if a specific EVOLVE action is legal. If not, a reason is provided.
         """
         # 1. Validate the evolution card from hand.
         evo_card = player.hand.get(evo_card_id)
@@ -459,7 +443,7 @@ class RulesEngine:
         game_state, player, new_active_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific retreat action is legal, returning a reason for failure.
+        Validates if a specific RETREAT action is legal. If not, a reason is provided.
         """
         # 1. Check for an active monster.
         if not player.active_monster:
@@ -481,7 +465,7 @@ class RulesEngine:
                 False,
                 f"Not enough mana to pay retreat cost for '{player.active_monster.title}'.",
             )
-        
+
         # 5. Check for special conditions that prevent retreating.
         if "ASLEEP" in player.active_monster.special_conditions:
             return (
@@ -524,7 +508,7 @@ class RulesEngine:
         game_state, player, card_id: int
     ) -> tuple[bool, str | None]:
         """
-        Validates if a specific use action is legal, returning a reason for failure.
+        Validates if a specific USE action is legal. If not, a reason is provided.
         """
         # 1. Validate the card exists in hand.
         card_to_use = player.hand.get(card_id)
