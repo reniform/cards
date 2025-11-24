@@ -1,4 +1,4 @@
-from effects.effects import EffectRegistry
+from effects.effect_registry import EffectRegistry
 from core.enums import CardType
 from .card import CardTemplate
 

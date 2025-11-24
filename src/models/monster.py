@@ -2,7 +2,7 @@ import logging
 
 from core.combat import Attack
 from core.enums import CardType, ManaType, StageType
-from effects.effects import EffectRegistry
+from effects.effect_registry import EffectRegistry
 
 from .card import CardTemplate
 

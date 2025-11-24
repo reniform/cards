@@ -1,5 +1,5 @@
 import logging
-from effects.effects import EffectRegistry
+from effects.effect_registry import EffectRegistry
 
 logger = logging.getLogger(__name__)
 
