@@ -23,7 +23,7 @@ class ApplyStatusEffect(Effect):
         super().__init__(**kwargs)
         self.status_to_apply = self.value  # e.g., "POISONED", "CONFUSED"
 
-    def execute(self, game_state, source_player, target_player):
+    def execute(self, game_state: 'GameState', source_player: 'PlayerUnit', target_player: 'PlayerUnit') -> None:
         if not self.status_to_apply:
             logger.warning("ApplyStatusEffect has no 'value' to apply.")
             return
@@ -49,7 +49,7 @@ class HealEffect(Effect):
             logger.error(f"Invalid heal 'value' for HealEffect: {self.value}")
             self.heal_amount = 0
 
-    def execute(self, game_state, source_player, target_player):
+    def execute(self, game_state: 'GameState', source_player: 'PlayerUnit', target_player: 'PlayerUnit') -> None:
         if self.heal_amount <= 0:
             return
 
