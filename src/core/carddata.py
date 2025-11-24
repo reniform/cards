@@ -1,5 +1,4 @@
-from core.card_factory import CardFactory
-from core.enums import ManaType, CardType, StageType
+from core.enums import ManaType, CardType
 import random
 
 # =====================================================================

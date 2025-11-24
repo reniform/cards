@@ -273,3 +273,25 @@ class TerminalView:
                 f"[{card_id}] {card.card.title}\t{card.card.type.value.upper()}"
             )
         return "\n".join(hand_strings)
+    
+    def redraw_screen(self, game_state) -> None:
+        # os.system("cls" if os.name == "nt" else "clear")
+
+        print(game_state.legal_actions)  # Keep this for debugging
+
+        print(
+            f"\n== {cf.bold} Turn [{game_state.turn_count}] {cf.reset} ======================================================================"
+        )
+        print(TerminalView.print_player_data(game_state.waiting_player, opposite=True))
+        print(TerminalView.print_bench(game_state.waiting_player))
+        print(TerminalView.print_active_monster(game_state.waiting_player))
+        print(TerminalView.print_active_monster(game_state.active_player, Bold=True))
+        print(TerminalView.print_bench(game_state.active_player))
+        print(TerminalView.print_player_data(game_state.active_player))
+        print(TerminalView.print_hand(game_state.active_player))
+        print(TerminalView.print_prompt(game_state.legal_action_types))
+
+    def get_command(self, game_state):
+        # You can use the game_state to create a dynamic prompt
+        prompt = f"[{game_state.active_player.title}] perform an action! ==> "
+        return input(prompt)

@@ -11,6 +11,9 @@ from core.game import GameState
 from models.monster import MonsterCard, MonsterTemplate
 from models.player import PlayerUnit
 #from models.utility import UtilityCard, UtilityTemplate
+from controller.game_controller import GameController
+from termio.view import TerminalView
+
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +112,10 @@ def main() -> None:
             break
 
     # Create and run the game state.
-    game = GameState(player, opponent)
-    game.run()
+    game_state = GameState(player, opponent)
+    terminal_view = TerminalView()
+    game_controller = GameController(game_state, terminal_view)
+    game_controller.run()
 
 
 if __name__ == "__main__":

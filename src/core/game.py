@@ -1,12 +1,8 @@
 import logging
 import os
 
-import colorful as cf
-
 from core.rules import RulesEngine
 from models.player import PlayerUnit
-from termio.commands import CommandHandler
-from termio.view import TerminalView
 from core.coins import coin
 
 logger = logging.getLogger(__name__)
@@ -21,6 +17,7 @@ class GameState:
         self.current_phase = "main"
         self.legal_actions = []
         self.legal_action_types = set()
+        self.winner = None
 
     @property
     def waiting_player(self):
@@ -144,15 +141,14 @@ class GameState:
 
         # 5. Check for win condition (no more prize cards).
         if not prize_taker.prize:
-            logger.info(f"{prize_taker.title} has taken all their prize cards!")
-            print(f"Game over!!! {prize_taker.title} wins!")
-            os._exit(0)
+            logger.info(f"{prize_taker.title} has taken all their prize cards! They win!")
+            self.winner = prize_taker
 
         # 6. The player with the knocked-out monster must promote a new one.
         if not knocked_out_player.bench:
             logger.info(f"{knocked_out_player.title} has no benched monsters to promote.")
-            print(f"Game over!!! {prize_taker.title} wins!")
-            os._exit(0)
+            logger.info(f"Game over!!! {prize_taker.title} wins!")
+            self.winner = prize_taker
         else:
             logger.info(f"{knocked_out_player.title} must choose a new active monster from their bench.")
             # TODO: Force the player to use a "promote" command.
@@ -164,54 +160,4 @@ class GameState:
         if self.player2.active_monster and self.player2.active_monster.health <= 0:
             self._handle_knockout(self.player2)
 
-    def redraw_screen(self) -> None:
-        # os.system("cls" if os.name == "nt" else "clear")
-
-        print(self.legal_actions)  # Keep this for debugging
-
-        print(
-            f"\n== {cf.bold} Turn [{self.turn_count}] {cf.reset} ======================================================================"
-        )
-        print(TerminalView.print_player_data(self.waiting_player, opposite=True))
-        print(TerminalView.print_bench(self.waiting_player))
-        print(TerminalView.print_active_monster(self.waiting_player))
-        print(TerminalView.print_active_monster(self.active_player, Bold=True))
-        print(TerminalView.print_bench(self.active_player))
-        print(TerminalView.print_player_data(self.active_player))
-        print(TerminalView.print_hand(self.active_player))
-        print(TerminalView.print_prompt(self.legal_action_types))
-
-    def run(self) -> None:
-        """
-        The main game loop.
-        """
-        while True:
-            # 1. Calculate all legal actions for the current state.
-            self.legal_actions = self.get_legal_actions(self.active_player)
-            self.legal_action_types = {action["type"] for action in self.legal_actions}
-
-            # 2. Redraw the screen with the new state.
-            self.redraw_screen()
-            command = input(f"[{self.active_player.title}] perform an action! ==> ")
-
-            parts = command.split()
-            if not parts:
-                continue
-
-            command_word = parts[0]
-            args = parts[1:]
-
-            if command_word == "debug":  # Special case to break the loop
-                break
-            elif handler := CommandHandler.COMMANDS.get(command_word):
-                # Pass the whole game state to the handler
-                turn_ended, needs_redraw = handler(self, *args)
-                if turn_ended:
-                    self.next_turn()
-                # The loop will automatically redraw on the next iteration.
-
-            else:
-                print("??? What???")
-
-            # 4. After any action, check for knockouts.
-            self.check_knockouts()
+    
