@@ -1,7 +1,6 @@
 import os
 from core.enums import CardType
 from core.rules import RulesEngine
-from termio.view import TerminalView, ManaColor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -314,15 +313,6 @@ class CommandHandler:
         )  # End the turn, no redraw needed here (main loop handles it)
 
     @staticmethod
-    def handle_show(game_state, *args) -> bool | bool:
-        if args and args[0] == "hand":
-            hand_string = TerminalView.get_hand_list_string(game_state.active_player)
-            print(hand_string)
-        else:
-            print("Usage: show hand")
-        return (False, False)
-
-    @staticmethod
     def handle_reset(game_state, *args) -> bool | bool:
         """
         Resets the entire game state for testing.
@@ -437,7 +427,6 @@ class CommandHandler:
         "inspect": handle_inspect,
         "mana": handle_mana,
         "pass": handle_pass,
-        "show": handle_show,
         "reset": handle_reset,
         "retreat": handle_retreat,
         "use": handle_utility,  # alias
