@@ -73,8 +73,9 @@ def main() -> None:
     # The `generate_deck_from_list` function will take these titles
     # and fetch their full data from the database.
     player_deck_list = [
-        "Bulbasaur", "Ivysaur", "Venusaur",  # Grass line
-        "Charmander", "Charmeleon", "Charizard",  # Fire line
+        "Bulbasaur", "Ivysaur", "Venusaur", 
+        "Charmander", "Charmeleon", "Charizard",
+        "Weedle", "Kakuna", "Beedrill",
     ] * 4
 
     # Generate and setup decks.

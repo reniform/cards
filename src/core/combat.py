@@ -16,7 +16,15 @@ class Attack:
 
     def __init__(self, **kwargs) -> None:
         self.title = kwargs["title"]  # str
-        self.damage = int(kwargs["damage"])  # int
+        damage_val = kwargs.get("damage")
+        if damage_val is None or damage_val == '':
+            self.damage = 0
+        elif isinstance(damage_val, str):
+            # Strip non-digit characters to handle values like '30+', '20x'
+            digits = "".join(filter(str.isdigit, damage_val))
+            self.damage = int(digits) if digits else 0
+        else:
+            self.damage = int(damage_val)
         self.cost = kwargs["cost"]  # dict: ManaType: int
         self.description = kwargs["description"]
         # Convert raw effect dictionaries into executable Effect objects
