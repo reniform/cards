@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base_command import Command
 
 if TYPE_CHECKING:
-    from core.game import GameState
+    from core.game import GameState, GameController
 
 
 class RetreatCommand(Command):
@@ -20,7 +20,7 @@ class RetreatCommand(Command):
         """
         self.promoted_card_id = promoted_card_id
 
-    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState", controller: "GameController") -> tuple[bool, bool]:
         """
         Executes the RETREAT action.
 

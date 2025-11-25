@@ -74,6 +74,7 @@ class Effect(ABC):
         source_player: "PlayerUnit",
         target_player: "PlayerUnit",
         attack_dealt_damage: bool | None = None,
+        controller: "GameController" | None = None,
     ):
         """Overriden in subclasses. Returns a modified game_state."""
         raise NotImplementedError

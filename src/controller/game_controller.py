@@ -15,6 +15,19 @@ class GameController:
         self.view = view
         self.command_parser = CommandParser()
 
+    def get_attack_choice(self, attacks: list) -> int:
+        """
+        Uses the view to prompt the current player to choose an attack from a list.
+
+        Args:
+            attacks: A list of Attack objects to choose from.
+
+        Returns:
+            The 0-based index of the chosen attack.
+        """
+        # This method acts as a bridge, so effects don't need to know about the view.
+        return self.view.prompt_for_attack_choice(attacks)
+
     def _is_command_legal(self, command: Command) -> bool:
         """
         Checks if a parsed command object corresponds to a legal action.
@@ -70,7 +83,7 @@ class GameController:
                     # Loop again to redraw the screen after the meta command.
                     continue
             elif self._is_command_legal(command_obj):
-                turn_ended, _ = command_obj.execute(self.game_state)
+                turn_ended, _ = command_obj.execute(self.game_state, self)
                 if turn_ended:
                     self.game_state.next_turn()
             else:

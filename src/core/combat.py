@@ -35,7 +35,7 @@ class Attack:
         ]
 
     def execute(
-        self, game_state, attacker, target
+        self, game_state, attacker, target, controller
     ) -> None:
         """
         Executes the attack from player to player; performs the check for mana.
@@ -45,6 +45,7 @@ class Attack:
             game_state (GameState): The current state of the game.
             attacker (PlayerUnit): The player with the monster performing the attack.
             target (PlayerUnit): The player with the monster receiving the attack.
+            controller (GameController): The game controller for handling user input.
         """
 
         # 1. Deal base damage
@@ -84,6 +85,7 @@ class Attack:
                     source_player=attacker,
                     target_player=target,
                     attack_dealt_damage=damage_was_dealt,
+                    controller=controller,
                 )
 
         # 3. Mark attacker flag

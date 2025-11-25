@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base_command import Command
 
 if TYPE_CHECKING:
-    from core.game import GameState
+    from core.game import GameState, GameController
 
 
 class BenchCommand(Command):
@@ -20,7 +20,7 @@ class BenchCommand(Command):
         """
         self.card_id = card_id
 
-    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState", controller: "GameController") -> tuple[bool, bool]:
         """
         Executes the BENCH action.
 

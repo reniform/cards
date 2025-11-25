@@ -4,6 +4,7 @@ from .base_command import Command
 
 if TYPE_CHECKING:
     from core.game import GameState
+    from controller.game_controller import GameController
 
 
 class AttackCommand(Command):
@@ -20,7 +21,7 @@ class AttackCommand(Command):
         """
         self.attack_index = attack_index
 
-    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState", controller: "GameController") -> tuple[bool, bool]:
         """
         Executes the ATTACK action.
 
@@ -42,6 +43,7 @@ class AttackCommand(Command):
             game_state=game_state,
             player=attacker,
             target=defender,
+            controller=controller,
         )
 
         # After damage and effects are applied, check for knockouts.

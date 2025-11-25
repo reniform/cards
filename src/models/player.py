@@ -386,7 +386,7 @@ class PlayerUnit:
 
         # Move the active monster to the bench and clear special conditions
         retreated_monster = self.active_monster
-        retreated_monster.special_conditions = []
+        retreated_monster.special_conditions = {}
         self.bench[self.active_monster.id] = self.active_monster
         self.active_monster = new_active_monster
         logger.info(
@@ -454,7 +454,7 @@ class PlayerUnit:
         return True
 
     #! UTILITY METHODS
-    def use_utility_card(self, card_id, game_state):
+    def use_utility_card(self, card_id, game_state, controller):
         utility_card = self.hand.get(card_id)
         if not utility_card or utility_card.card.type != CardType.UTILITY:
             logger.warning(f"Card ID {card_id} is not a valid UtilityCard in hand.")
@@ -464,7 +464,7 @@ class PlayerUnit:
 
         for effect in effects_to_execute:
             # Pass the necessary context to the effect
-            effect.execute(game_state, utility_card, self)
+            effect.execute(game_state, self, None, controller=controller)
 
         self.remove_from_hand(card_id)
         self.add_to_discard(utility_card)
@@ -521,7 +521,7 @@ class PlayerUnit:
         # Cleanup and clear special conditions
         self.remove_from_hand(evo_card_id)
         new_evo_card.has_evolved = True
-        new_evo_card.special_conditions = []
+        new_evo_card.special_conditions = {}
         logger.info(f"{base_card.title} evolved into {new_evo_card.title}!")
         return True
 

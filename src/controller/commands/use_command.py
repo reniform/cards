@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base_command import Command
 
 if TYPE_CHECKING:
-    from core.game import GameState
+    from core.game import GameState, GameController
 
 
 class UseCommand(Command):
@@ -20,7 +20,7 @@ class UseCommand(Command):
         """
         self.card_id = card_id
 
-    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState", controller: "GameController") -> tuple[bool, bool]:
         """
         Executes the USE action.
 
@@ -32,5 +32,5 @@ class UseCommand(Command):
             the view needs to be redrawn.
         """
         player = game_state.current_player
-        player.use_utility_card(self.card_id, game_state)
+        player.use_utility_card(self.card_id, game_state, controller)
         return (False, True)

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base_command import Command
 
 if TYPE_CHECKING:
-    from core.game import GameState
+    from core.game import GameState, GameController
 
 
 class EvolveCommand(Command):
@@ -22,7 +22,7 @@ class EvolveCommand(Command):
         self.evo_card_id = evo_card_id
         self.base_card_id = base_card_id
 
-    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState", controller: "GameController") -> tuple[bool, bool]:
         """
         Executes the EVOLVE action.
 

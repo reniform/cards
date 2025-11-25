@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from core.game import GameState
+    from core.game import GameState, GameController
 
 
 class Command(ABC):
@@ -14,7 +14,7 @@ class Command(ABC):
     """
 
     @abstractmethod
-    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState", controller: "GameController") -> tuple[bool, bool]:
         """
         Executes the command. This method should modify the game state according
         to the specific implementation of the command.

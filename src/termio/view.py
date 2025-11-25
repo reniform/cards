@@ -268,6 +268,31 @@ class TerminalView:
             )
         return "\n".join(hand_strings)
     
+    def prompt_for_attack_choice(self, attacks: list) -> int:
+        """
+        Displays a list of attacks and prompts the user to choose one.
+
+        Args:
+            attacks: A list of Attack objects.
+
+        Returns:
+            The 0-based index of the chosen attack.
+        """
+        print("\nChoose an attack to copy:")
+        for i, attack in enumerate(attacks):
+            print(f"  [{i}] {attack.title} - {attack.description}")
+
+        while True:
+            try:
+                choice = input("Enter the number of the attack: ")
+                choice_index = int(choice)
+                if 0 <= choice_index < len(attacks):
+                    return choice_index  # Return 0-based index
+                else:
+                    print("Invalid number. Please choose from the list.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
     def redraw_screen(self, game_state) -> None:
         # os.system("cls" if os.name == "nt" else "clear")
 

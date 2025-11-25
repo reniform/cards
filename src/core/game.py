@@ -68,9 +68,7 @@ class GameState:
                     logger.info(
                         f"HEADS {self.active_player.active_monster} has recovered from BURNED."
                     )
-                    self.active_player.active_monster.special_conditions.remove(
-                        "BURNED"
-                    )
+                    del self.active_player.active_monster.special_conditions["BURNED"]
                 else:
                     logger.info(
                         f"TAILS: {self.active_player.active_monster} remains BURNED."
@@ -83,18 +81,14 @@ class GameState:
                     logger.info(
                         f"HEADS: {self.active_player.active_monster} has recovered from ASLEEP."
                     )
-                    self.active_player.active_monster.special_conditions.remove(
-                        "ASLEEP"
-                    )
+                    del self.active_player.active_monster.special_conditions["ASLEEP"]
                 else:
                     logger.info(
                         f"TAILS: {self.active_player.active_monster} remains ASLEEP."
                     )
             if "PARALYZED" in self.active_player.active_monster.special_conditions:
-                logger.info(
-                    f"Removing PARALYZED from {self.active_player.active_monster}"
-                )
-                self.active_player.active_monster.special_conditions.remove("PARALYZED")
+                logger.info(f"Removing PARALYZED from {self.active_player.active_monster}")
+                del self.active_player.active_monster.special_conditions["PARALYZED"]
 
         # Reset monster card flags for the new active player.
         if self.active_player.active_monster:

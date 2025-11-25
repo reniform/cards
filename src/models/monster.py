@@ -115,7 +115,7 @@ class MonsterCard(CardTemplate):
         """Returns the title from the card template."""
         return self.card.title
 
-    def use_attack(self, attack_index, game_state, player, target) -> bool:
+    def use_attack(self, attack_index, game_state, player, target, controller) -> bool:
         """Performs attack from the given index. Attacks take the form of dicts and are kept in a list.
         See the `Attack` class docstring for more info on attack execution.
 
@@ -124,10 +124,11 @@ class MonsterCard(CardTemplate):
             game_state (GameState): The current state of the game.
             player (PlayerUnit): The player with the monster performing the attack.
             target (PlayerUnit): The player with the monster receiving the attack.
+            controller (GameController): The game controller for handling user input.
         """
         if 0 <= attack_index < len(self.card.attacks):
             attack = self.card.attacks[attack_index]
-            attack.execute(game_state, player, target)
+            attack.execute(game_state, player, target, controller)
             return True
         else:
             print(
