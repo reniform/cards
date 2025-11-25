@@ -33,3 +33,8 @@ class EffectRegistry:
             )
             return None
         return effect_class(**effect_dict)
+
+
+# Import all effect modules here to ensure they are registered.
+from . import monster_effects # noqa: E402, F401
+from . import player_effects  # noqa: E402, F401

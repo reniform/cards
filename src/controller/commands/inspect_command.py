@@ -79,6 +79,9 @@ class InspectCommand(Command):
                     )
                     if attack.description:
                         print(f"       {attack.description}")
+                    if attack.effects:
+                        for effect in attack.effects:
+                            print(f"         - Effect: {effect._raw_data}")
             else:
                 print("    - No attacks.")
 

@@ -39,6 +39,31 @@ class ApplyStatusEffect(Effect):
             logger.info(f"Applied '{self.status_to_apply}' to {target_monster.title}.")
 
 
+@EffectRegistry.register("DAMAGE_SELF")
+class DamageSelfEffect(Effect):
+    """
+    `DamageSelfEffect` (corresponding registration string: `DAMAGE_SELF`)
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        try:
+            self.damage_amount = int(self.value)
+        except ValueError:
+            logger.error(f"Invalid damage 'value' for DamageSelfEffect: {self.value}")
+            self.damage_amount = 0
+    
+    def execute(self, game_state: 'GameState', source_player: 'PlayerUnit', target_player: 'PlayerUnit') -> None:
+        if self.damage_amount <= 0:
+            return
+        
+        # Delegate the condition check to the base class.
+        if self.should_execute():
+            source_player.active_monster.take_damage(self.damage_amount)
+            logger.info(f"Dealt {self.damage_amount} damage to {source_player.active_monster.title}.")
+        else:
+            logger.info(f"Condition '{self.condition}' not met. No self-damage.")
+
+
 @EffectRegistry.register("HEAL")
 class HealEffect(Effect):
     def __init__(self, **kwargs):

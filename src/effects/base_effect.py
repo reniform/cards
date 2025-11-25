@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+import logging
+from core.coins import coin
 
 if TYPE_CHECKING:
     from core.game import GameState
     from models.player import PlayerUnit
+
+
+logger = logging.getLogger(__name__)
 
 
 class Effect(ABC):
@@ -22,6 +27,34 @@ class Effect(ABC):
         self.condition = kwargs.get("condition", "ALWAYS")
         self.execution_order = kwargs.get("execution_order")
         self._raw_data = kwargs
+
+    def should_execute(self) -> bool:
+        """
+        Evaluates if the effect's condition is met.
+        Handles coin flips internally if required by the condition.
+        """
+        condition = self.condition
+
+        if condition == "ALWAYS":
+            # No coin flip needed, the effect always passes its check.
+            return True
+
+        if "ON_COIN_FLIP" in condition:
+            # This condition requires a coin flip. Let's perform it.
+            logger.info("Flipping a coin for effect...")
+            is_heads = coin()
+
+            if is_heads:
+                logger.info("Coin is HEADS.")
+                # The condition passes only if it was waiting for HEADS.
+                return condition == "ON_COIN_FLIP_HEADS"
+            else:  # is_tails
+                logger.info("Coin is TAILS.")
+                # The condition passes only if it was waiting for TAILS.
+                return condition == "ON_COIN_FLIP_TAILS"
+
+        logger.warning(f"Unknown or unhandled condition: '{condition}'. Defaulting to False.")
+        return False
 
     @abstractmethod
     def execute(
