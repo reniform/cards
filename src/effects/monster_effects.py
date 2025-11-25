@@ -114,7 +114,7 @@ class HealEffect(Effect):
             )
             return
 
-        # Use the base class to check all conditions, including the new attack success check.
+        # Use the base class to check all conditions.
         if self.should_execute(attack_dealt_damage):
             # Apply the heal, but only up to its max health.
             target_monster.health = min(

@@ -6,6 +6,7 @@ from core.coins import coin
 if TYPE_CHECKING:
     from core.game import GameState
     from models.player import PlayerUnit
+    from controller.game_controller import GameController
 
 
 logger = logging.getLogger(__name__)
