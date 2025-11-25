@@ -102,6 +102,9 @@ def main() -> None:
 
     # Create and run the game state.
     game_state = GameState(player, opponent)
+    # Manually trigger the start-of-turn logic for the first player.
+    game_state._start_new_turn_for_player()
+
     terminal_view = TerminalView()
     game_controller = GameController(game_state, terminal_view)
     game_controller.run()

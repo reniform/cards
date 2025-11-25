@@ -98,3 +98,26 @@ class HealEffect(Effect):
             target_monster.card.health, target_monster.health + self.heal_amount
         )
         logger.info(f"Healed {target_monster.title} for {self.heal_amount} HP.")
+
+@EffectRegistry.register("SET_IMMUNE")
+class SetImmuneEffect(Effect):
+    """
+    `SetImmuneEffect` (corresponding registration string: `SET_IMMUNE`)
+    makes a monster immune to damage and effects until the end of the next turn.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def execute(
+        self, game_state: "GameState", source_player: "PlayerUnit", target_player: "PlayerUnit"
+    ) -> None:
+        target_monster = None
+        if self.target == "SELF":
+            target_monster = source_player.active_monster
+        elif self.target == "DEFENDING_MONSTER":
+            target_monster = target_player.active_monster
+
+        if target_monster:
+            target_monster.is_immune = True
+            logger.info(f"{target_monster.title} is now immune to damage and effects.")

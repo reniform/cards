@@ -144,6 +144,11 @@ class MonsterCard(CardTemplate):
             damage (int): The amount of damage to be taken.
         """
 
+        if self.is_immune:
+            logger.info(f"{self.title} is immune and takes no damage.")
+            # It's good practice to also reset immunity after it blocks an attack
+            self.is_immune = False
+            return
         # Apply damage
         self.health -= damage
 

@@ -36,24 +36,13 @@ class GameState:
         """
         Handles all end-of-turn and start-of-turn logic.
         This includes swapping the active player and drawing a card for the new player.
-        """
-        # Swap the active player.
-        # TODO: IMPLEMENT SWITCH FOR SINGLE OR MULTI ONCE HEURISTICS MODEL IS UP
+        """        
+        self.active_player = self.waiting_player
+        self.turn_count += 1
+        self._start_new_turn_for_player()
 
-        # Reset monster card flags.
-        if self.active_player.active_monster:
-            self.active_player.active_monster.has_attacked = False
-            self.active_player.active_monster.has_attached = False
-            self.active_player.active_monster.has_evolved = False
-
-        for monster in self.active_player.bench.values():
-            monster.has_attacked = False
-            monster.has_attached = False
-            monster.has_evolved = False
-
-        # The new active player draws a card.
-        if len(self.active_player.deck) > 0:
-            self.active_player.draw_from_deck(1)
+    def _start_new_turn_for_player(self):
+        """Handles all logic that occurs at the very beginning of a player's turn."""
 
         # Check for status conditions
         if self.active_player.active_monster:
@@ -107,9 +96,18 @@ class GameState:
                 )
                 self.active_player.active_monster.special_conditions.remove("PARALYZED")
 
-        # Perform the player switch.
-        self.active_player = self.waiting_player
-        self.turn_count += 1
+        # Reset monster card flags for the new active player.
+        if self.active_player.active_monster:
+            self.active_player.active_monster.has_attacked = False
+            self.active_player.active_monster.has_attached = False
+            self.active_player.active_monster.has_evolved = False
+            self.active_player.active_monster.is_immune = False
+
+        for monster in self.active_player.bench.values():
+            monster.has_attacked = False
+            monster.has_attached = False
+            monster.has_evolved = False
+            monster.is_immune = False
 
     def _handle_knockout(self, knocked_out_player: PlayerUnit):
         """
