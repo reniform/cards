@@ -41,7 +41,7 @@ class AttackCommand(Command):
             attack_index=self.attack_index,
             game_state=game_state,
             player=attacker,
-            target=defender
+            target=defender,
         )
 
         # After damage and effects are applied, check for knockouts.

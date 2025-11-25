@@ -20,6 +20,7 @@ class CommandParser:
     """
     Parses raw string input from the user and converts it into a Command object.
     """
+
     def __init__(self):
         """Initializes the CommandParser."""
         pass
@@ -45,11 +46,20 @@ class CommandParser:
             # Zero-argument commands
             if command_word == "pass":
                 return PassCommand()
-            
+
             # One-argument commands
-            elif command_word in ["activate", "bench", "use", "retreat", "inspect", "attack"]:
+            elif command_word in [
+                "activate",
+                "bench",
+                "use",
+                "retreat",
+                "inspect",
+                "attack",
+            ]:
                 if len(args) != 1:
-                    logger.warning(f"'{command_word}' expects 1 argument, got {len(args)}.")
+                    logger.warning(
+                        f"'{command_word}' expects 1 argument, got {len(args)}."
+                    )
                     return None
                 card_id = int(args[0])
                 if command_word == "activate":
@@ -64,11 +74,13 @@ class CommandParser:
                     return InspectCommand(card_id=card_id)
                 elif command_word == "attack":
                     return AttackCommand(attack_index=card_id)
-                
+
             # Two-command arguments
             elif command_word in ["attach", "evolve"]:
                 if len(args) != 2:
-                    logger.warning(f"'{command_word}' expects 2 arguments, got {len(args)}.")
+                    logger.warning(
+                        f"'{command_word}' expects 2 arguments, got {len(args)}."
+                    )
                     return None
                 arg1 = int(args[0])
                 arg2 = int(args[1])
@@ -76,20 +88,22 @@ class CommandParser:
                     return AttachCommand(mana_card_id=arg1, target_id=arg2)
                 elif command_word == "evolve":
                     return EvolveCommand(evo_card_id=arg1, base_card_id=arg2)
-            
+
             # Three-argument commands
-            elif command_word == "mana": # Can take 2 or 3 arguments
+            elif command_word == "mana":  # Can take 2 or 3 arguments
                 if len(args) not in [2, 3]:
                     logger.warning(f"'mana' expects 2 or 3 arguments, got {len(args)}.")
                     return None
-                
+
                 if len(args) == 3:
                     # mana <target_id> <type> <qty>
                     target_id = int(args[0])
                     mana_type = args[1]
                     quantity = int(args[2])
-                    return ManaCommand(mana_type=mana_type, quantity=quantity, target_id=target_id)
-                else: # len(args) == 2
+                    return ManaCommand(
+                        mana_type=mana_type, quantity=quantity, target_id=target_id
+                    )
+                else:  # len(args) == 2
                     # mana <type> <qty> (target is defaulted to active monster)
                     mana_type = args[0]
                     quantity = int(args[1])

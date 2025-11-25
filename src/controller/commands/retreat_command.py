@@ -20,7 +20,7 @@ class RetreatCommand(Command):
         """
         self.promoted_card_id = promoted_card_id
 
-    def execute(self, game_state: 'GameState') -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
         """
         Executes the RETREAT action.
 

@@ -45,16 +45,18 @@ class ManaCommand(Command):
                 if self.target_id in p.bench:
                     target_monster = p.bench[self.target_id]
                     break
-        
+
         if not target_monster:
-            logger.warning(f"MANA command failed: Target monster not found.")
+            logger.warning("MANA command failed: Target monster not found.")
             return False, False
 
         try:
             mana_enum = ManaType(self.mana_type.lower())
             target_monster.mana_pool[mana_enum] += self.quantity
-            logger.info(f"Added {self.quantity} {self.mana_type} mana to {target_monster.title} (ID: {self.target_id}).")
-            return False, True # Doesn't end turn, needs redraw
+            logger.info(
+                f"Added {self.quantity} {self.mana_type} mana to {target_monster.title} (ID: {self.target_id})."
+            )
+            return False, True  # Doesn't end turn, needs redraw
         except ValueError:
             logger.error(f"MANA command failed: Invalid mana type '{self.mana_type}'.")
             return False, False

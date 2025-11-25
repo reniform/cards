@@ -5,6 +5,7 @@ from .base_command import Command
 if TYPE_CHECKING:
     from core.game import GameState
 
+
 class PassCommand(Command):
     """
     PASS ends the current player's turn.
@@ -13,7 +14,7 @@ class PassCommand(Command):
     def __init__(self):
         pass
 
-    def execute(self, game_state: 'GameState') -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
         """
         Executes the PASS action.
 

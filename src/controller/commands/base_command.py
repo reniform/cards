@@ -4,16 +4,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.game import GameState
 
+
 class Command(ABC):
     """
     Abstract base class for all game commands.
-    
+
     This class defines the interface that all concrete command objects
     must implement. The GameController will interact with these objects.
     """
 
     @abstractmethod
-    def execute(self, game_state: 'GameState') -> tuple[bool, bool]:
+    def execute(self, game_state: "GameState") -> tuple[bool, bool]:
         """
         Executes the command. This method should modify the game state according
         to the specific implementation of the command.
