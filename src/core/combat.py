@@ -1,5 +1,6 @@
 import logging
 from effects.effect_registry import EffectRegistry
+from core.conditions import CONDITION_DISPATCHER
 
 logger = logging.getLogger(__name__)
 
@@ -79,14 +80,27 @@ class Attack:
 
         # 2. Execute effects
         if self.effects:
+            # Bundle all relevant information into a single context object.
+            # This makes it easy to pass state to condition checkers.
+            context = {
+                "game_state": game_state,
+                "source_player": attacker,
+                "target_player": target,
+                "damage_was_dealt": damage_was_dealt,
+                "controller": controller,
+            }
+
             for effect in self.effects:
-                effect.execute(
-                    game_state=game_state,
-                    source_player=attacker,
-                    target_player=target,
-                    attack_dealt_damage=damage_was_dealt,
-                    controller=controller,
-                )
+                # Default to "ALWAYS" if an effect has no specific condition.
+                condition_name = getattr(effect, "condition", "ALWAYS") or "ALWAYS"
+                checker_func = CONDITION_DISPATCHER.get(condition_name)
+
+                if checker_func and checker_func(context):
+                    logger.info(f"Condition '{condition_name}' met. Executing effect for {self.title}.")
+                    # By unpacking the context dictionary, we pass its key-value pairs
+                    # as keyword arguments to the execute method. This is cleaner and
+                    # more flexible than passing arguments individually.
+                    effect.execute(**context)
 
         # 3. Mark attacker flag
         attacker.active_monster.has_attacked = True
