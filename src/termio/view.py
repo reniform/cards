@@ -24,6 +24,26 @@ class TerminalView:
     Handles rendering game state to the terminal.
     """
 
+    def _format_legal_actions(self, legal_actions: list) -> str:
+        """
+        Formats the list of legal actions into a human-readable string.
+        """
+        if not legal_actions:
+            return "No legal actions available."
+
+        # Use a set to show unique action types to avoid spamming the user
+        # with every possible target for an action.
+        summarized_actions = set()
+
+        for action in legal_actions:
+            # We only care about the type of action, not the specific targets.
+            action_type = action["type"].lower()
+            summarized_actions.add(action_type)
+
+        # Sort for consistent ordering and add the universal exit command
+        sorted_actions = sorted(list(summarized_actions)) + ['exit']
+        return " | ".join(sorted_actions)
+
     @staticmethod
     def get_mana_pool_string(monster) -> str:
         """Returns s shorthand of the mana pool as a formatted string."""
@@ -199,32 +219,6 @@ class TerminalView:
         return "\n".join(lines)
 
     @staticmethod
-    def print_prompt(legal_action_types: set) -> str:
-        """
-        Builds the action prompt string based on a set of legal action types
-        provided by the game engine.
-        """
-        parts = ["== actions:"]
-
-        # Use the provided set of legal actions to build the prompt.
-        # The order can be defined here for a consistent look.
-        if "PASS" in legal_action_types:
-            parts.append("pass")
-        if "ACTIVATE" in legal_action_types:
-            parts.append("activate")
-        if "ATTACH" in legal_action_types:
-            parts.append("attach")
-        if "EVOLVE" in legal_action_types:
-            parts.append("evolve")
-        if "ATTACK" in legal_action_types:
-            parts.append("attack")
-        # Add other commands as they become legal
-        # parts.append("bench | use | retreat | etc...")
-
-        parts.append("show hand | exit")
-        return " | ".join(parts)
-
-    @staticmethod
     def get_attack_list_string(monster) -> str:
         """
         Returns a formatted multi-line string of the monster's available attacks,
@@ -277,8 +271,6 @@ class TerminalView:
     def redraw_screen(self, game_state) -> None:
         # os.system("cls" if os.name == "nt" else "clear")
 
-        print(game_state.legal_actions)  # Keep this for debugging
-
         print(
             f"\n== {cf.bold} Turn [{game_state.turn_count}] {cf.reset} ======================================================================"
         )
@@ -289,9 +281,15 @@ class TerminalView:
         print(TerminalView.print_bench(game_state.active_player))
         print(TerminalView.print_player_data(game_state.active_player))
         print(TerminalView.print_hand(game_state.active_player))
-        print(TerminalView.print_prompt(game_state.legal_action_types))
 
     def get_command(self, game_state):
-        # You can use the game_state to create a dynamic prompt
-        prompt = f"[{game_state.active_player.title}] perform an action! ==> "
-        return input(prompt)
+        """
+        Displays available actions and prompts the user for their next command.
+        """
+        # Format and display the legal actions before the prompt.
+        actions_str = self._format_legal_actions(game_state.legal_actions)
+        print(f"== actions: {actions_str}")
+
+        # Get user input.
+        command = input(f"({game_state.current_player.title}) perform an action! ==> ")
+        return command

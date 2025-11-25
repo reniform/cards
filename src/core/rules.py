@@ -1,7 +1,11 @@
 import logging
 
+from typing import TYPE_CHECKING
 from core.enums import CardType, StageType, ManaType
+from controller.commands.base_command import Command
 
+if TYPE_CHECKING:
+    from core.game import GameState
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +16,39 @@ class RulesEngine:
     * **Validation methods** consider the game state and either return `True`, or `False` with an error message.
     * **Get-action methods** return a list of all possible actions of a certain type and their potential targets.
     """
+
+    @staticmethod
+    def get_illegality_reason(game_state: "GameState", command: Command) -> str:
+        """
+        Determines why a given command object is illegal.
+
+        This method is called *after* a command has failed the legality check.
+        It re-validates the action to produce a user-friendly reason for
+        the failure.
+
+        Args:
+            game_state: The current state of the game.
+            command: The illegal command object that was parsed.
+
+        Returns:
+            A string explaining why the command is illegal.
+        """
+        player = game_state.current_player
+        command_type = command.__class__.__name__.replace("Command", "").upper()
+
+        # Dynamically find the private validation method corresponding to the command.
+        # e.g., for "ActivateCommand", it looks for "_validate_activate_action".
+        validator_method_name = f"_validate_{command_type.lower()}_action"
+        validator = getattr(RulesEngine, validator_method_name, None)
+
+        if not validator:
+            return f"Unknown action type '{command_type}'."
+
+        # Call the specific validator with the command's attributes.
+        # The validator returns (is_legal, reason). We only care about the reason.
+        _, reason = validator(game_state, player, **command.__dict__)
+
+        return reason or "An unknown rule prevented this action."
 
     @staticmethod
     def get_legal_actions(game_state, player) -> list:
@@ -184,7 +221,7 @@ class RulesEngine:
 
     @staticmethod
     def _validate_attack_action(
-        game_state, player, attack_index: int, target_monster_id: int
+        game_state, player, attack_index: int
     ) -> tuple[bool, str | None]:
         """
         Validates if a specific ATTACK action is legal. If not, a reason is provided.
@@ -222,25 +259,13 @@ class RulesEngine:
             return (False, f"Invalid attack index for {attacker.title}: {attack_index}")
 
         # Validate the target monster.
-        target_monster = None
-        if (
-            game_state.waiting_player.active_monster
-            and game_state.waiting_player.active_monster.id == target_monster_id
-        ):
-            target_monster = game_state.waiting_player.active_monster
-        # TODO: Implement bench sniping.
-        # elif game_state.waiting_player.bench.get(target_monster_id):
-        #     target_monster = game_state.waiting_player.bench.get(target_monster_id)
+        target_monster = game_state.waiting_player.active_monster
 
         if not target_monster:
             return (
                 False,
-                f"Target monster with ID {target_monster_id} not found or not a valid target.",
+                "Opponent has no active monster to attack.",
             )
-
-        # Current rule: only active monster can be targeted.
-        if target_monster != game_state.waiting_player.active_monster:
-            return (False, "You can only attack the opponent's active monster.")
 
         # Check for sufficient mana for the chosen attack.
         attack = attacker.card.attacks[attack_index]
@@ -257,35 +282,27 @@ class RulesEngine:
         if not attacker:
             return actions
 
-        # Identify potential target monsters (currently only the opponent's active monster).
-        potential_target_monsters = []
-        if game_state.waiting_player.active_monster:
-            potential_target_monsters.append(game_state.waiting_player.active_monster)
-
-        if not potential_target_monsters:
+        # The only valid target is the opponent's active monster.
+        target_monster = game_state.waiting_player.active_monster
+        if not target_monster:
             return actions  # No targets, so no attack actions.
 
         # Iterate through each attack of the active monster.
         for i, attack in enumerate(attacker.card.attacks):
-            # For each attack, check against all potential targets.
-            for target_monster in potential_target_monsters:
-                is_legal, _ = RulesEngine._validate_attack_action(
-                    game_state, player, i, target_monster.id
+            is_legal, _ = RulesEngine._validate_attack_action(game_state, player, i)
+            if is_legal:
+                actions.append(
+                    {
+                        "type": "ATTACK",
+                        "payload": {
+                            "attack_name": attack.title,
+                            "attack_index": i,
+                        },
+                    }
                 )
-                if is_legal:
-                    actions.append(
-                        {
-                            "type": "ATTACK",
-                            "payload": {
-                                "attack_name": attack.title,
-                                "attack_index": i,
-                                "target_id": target_monster.id,
-                            },
-                        }
-                    )
-                    logger.debug(
-                        f"Legal action approved: ATTACK '{attack.title}' (index {i}) on target {target_monster.title} (ID: {target_monster.id}) for {player.title}"
-                    )
+                logger.debug(
+                    f"Legal action approved: ATTACK '{attack.title}' (index {i}) on target {target_monster.title} (ID: {target_monster.id}) for {player.title}"
+                )
         return actions
 
     @staticmethod
@@ -350,7 +367,7 @@ class RulesEngine:
 
     @staticmethod
     def _validate_evolve_action(
-        game_state, player, evo_card_id: int, base_monster_id: int
+        game_state, player, evo_card_id: int, base_card_id: int
     ) -> tuple[bool, str | None]:
         """
         Validates if a specific EVOLVE action is legal. If not, a reason is provided.
@@ -370,15 +387,15 @@ class RulesEngine:
 
         # 2. Validate the base monster on the field.
         base_monster = None
-        if player.active_monster and player.active_monster.id == base_monster_id:
+        if player.active_monster and player.active_monster.id == base_card_id:
             base_monster = player.active_monster
         else:
-            base_monster = player.bench.get(base_monster_id)
+            base_monster = player.bench.get(base_card_id)
 
         if not base_monster:
             return (
                 False,
-                f"Base monster with ID {base_monster_id} not found on your field.",
+                f"Base monster with ID {base_card_id} not found on your field.",
             )
 
         # 3. Check if the evolution is a valid match.
@@ -423,7 +440,7 @@ class RulesEngine:
         # For each combination, check if the evolution is valid.
         for evo_card in evo_cards_in_hand:
             for base_monster in monsters_on_field:
-                is_legal, _ = RulesEngine._validate_evolve_action(
+                is_legal, _ = RulesEngine._validate_evolve_action( # This call was already correct
                     game_state, player, evo_card.id, base_monster.id
                 )
                 if is_legal:
@@ -431,8 +448,8 @@ class RulesEngine:
                         {
                             "type": "EVOLVE",
                             "payload": {
-                                "evolution_card_id": evo_card.id,
-                                "base_monster_id": base_monster.id,
+                                "evo_card_id": evo_card.id,
+                                "base_card_id": base_monster.id,
                             },
                         }
                     )

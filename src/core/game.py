@@ -1,5 +1,4 @@
 import logging
-import os
 
 from core.rules import RulesEngine
 from models.player import PlayerUnit
@@ -20,9 +19,14 @@ class GameState:
         self.winner = None
 
     @property
-    def waiting_player(self):
+    def waiting_player(self) -> PlayerUnit:
         """A property to easily get the player who is not active."""
         return self.player2 if self.active_player is self.player1 else self.player1
+
+    @property
+    def current_player(self) -> PlayerUnit:
+        """A property to easily get the player whose turn it currently is."""
+        return self.active_player
 
     def get_legal_actions(self, player: PlayerUnit) -> list:
         """Retrieves the list of legal actions from the rules engine (see rules.py)."""

@@ -2,18 +2,14 @@ import logging
 
 import colorlog
 
-from core.carddata import give_test_card
-from core.enums import CardType
+from controller.game_controller import GameController
 from core.card_factory import CardFactory
-from database.card_repository import CardRepository
+from core.carddata import give_test_card
 from core.game import GameState
-#from models.mana import ManaCard, ManaTemplate
+from database.card_repository import CardRepository
 from models.monster import MonsterCard, MonsterTemplate
 from models.player import PlayerUnit
-#from models.utility import UtilityCard, UtilityTemplate
-from controller.game_controller import GameController
 from termio.view import TerminalView
-
 
 logger = logging.getLogger(__name__)
 
@@ -105,12 +101,6 @@ def main() -> None:
         opponent.return_hand_to_deck()
         opponent.shuffle_deck()
         opponent.draw_from_deck(7)
-
-    # Pre-activate an opponent monster for testing purposes.
-    for card_id, card in opponent.hand.items():
-        if card.card.type == CardType.MONSTER:
-            opponent.set_active_monster(card_id)
-            break
 
     # Create and run the game state.
     game_state = GameState(player, opponent)
