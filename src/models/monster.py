@@ -148,9 +148,10 @@ class MonsterCard(CardTemplate):
             logger.info(f"{self.title} is immune and takes no damage.")
             # It's good practice to also reset immunity after it blocks an attack
             self.is_immune = False
-            return
+            return False  # Damage was not applied
         # Apply damage
         self.health -= damage
+        return True  # Damage was applied
 
     #! MANA METHODS
     @property

@@ -28,12 +28,23 @@ class Effect(ABC):
         self.execution_order = kwargs.get("execution_order")
         self._raw_data = kwargs
 
-    def should_execute(self) -> bool:
+    def _check_attack_success(self, attack_dealt_damage: bool | None) -> bool:
+        """Helper to check for ONLY_IF_ATTACK_SUCCESSFUL condition."""
+        if self.condition == "ONLY_IF_ATTACK_SUCCESSFUL":
+            # If the condition requires success, the flag must be True.
+            # attack_dealt_damage can be None if the effect is not from an attack.
+            return attack_dealt_damage is True
+        # If the condition is not about attack success, it doesn't block execution.
+        return True
+
+    def should_execute(self, attack_dealt_damage: bool | None = None) -> bool:
         """
         Evaluates if the effect's condition is met.
         Handles coin flips internally if required by the condition.
         """
         condition = self.condition
+        if not self._check_attack_success(attack_dealt_damage):
+            return False
 
         if condition == "ALWAYS":
             # No coin flip needed, the effect always passes its check.
@@ -61,7 +72,8 @@ class Effect(ABC):
         self,
         game_state: "GameState",
         source_player: "PlayerUnit",
-        target_player: PlayerUnit,
+        target_player: "PlayerUnit",
+        attack_dealt_damage: bool | None = None,
     ):
         """Overriden in subclasses. Returns a modified game_state."""
         raise NotImplementedError

@@ -23,7 +23,13 @@ class ApplyStatusEffect(Effect):
         super().__init__(**kwargs)
         self.status_to_apply = self.value  # e.g., "POISONED", "CONFUSED"
 
-    def execute(self, game_state: 'GameState', source_player: 'PlayerUnit', target_player: 'PlayerUnit') -> None:
+    def execute(
+        self,
+        game_state: "GameState",
+        source_player: "PlayerUnit",
+        target_player: "PlayerUnit",
+        attack_dealt_damage: bool | None = None,
+    ) -> None:
         if not self.status_to_apply:
             logger.warning("ApplyStatusEffect has no 'value' to apply.")
             return
@@ -52,12 +58,18 @@ class DamageSelfEffect(Effect):
             logger.error(f"Invalid damage 'value' for DamageSelfEffect: {self.value}")
             self.damage_amount = 0
     
-    def execute(self, game_state: 'GameState', source_player: 'PlayerUnit', target_player: 'PlayerUnit') -> None:
+    def execute(
+        self,
+        game_state: "GameState",
+        source_player: "PlayerUnit",
+        target_player: "PlayerUnit",
+        attack_dealt_damage: bool | None = None,
+    ) -> None:
         if self.damage_amount <= 0:
             return
         
         # Delegate the condition check to the base class.
-        if self.should_execute():
+        if self.should_execute(attack_dealt_damage):
             source_player.active_monster.take_damage(self.damage_amount)
             logger.info(f"Dealt {self.damage_amount} damage to {source_player.active_monster.title}.")
         else:
@@ -74,7 +86,13 @@ class HealEffect(Effect):
             logger.error(f"Invalid heal 'value' for HealEffect: {self.value}")
             self.heal_amount = 0
 
-    def execute(self, game_state: 'GameState', source_player: 'PlayerUnit', target_player: 'PlayerUnit') -> None:
+    def execute(
+        self,
+        game_state: "GameState",
+        source_player: "PlayerUnit",
+        target_player: "PlayerUnit",
+        attack_dealt_damage: bool | None = None,
+    ) -> None:
         if self.heal_amount <= 0:
             return
 
@@ -91,13 +109,15 @@ class HealEffect(Effect):
             )
             return
 
-        # Resolve conditions
-
-        # Apply the heal, but only up to its max health.
-        target_monster.health = min(
-            target_monster.card.health, target_monster.health + self.heal_amount
-        )
-        logger.info(f"Healed {target_monster.title} for {self.heal_amount} HP.")
+        # Use the base class to check all conditions, including the new attack success check.
+        if self.should_execute(attack_dealt_damage):
+            # Apply the heal, but only up to its max health.
+            target_monster.health = min(
+                target_monster.card.health, target_monster.health + self.heal_amount
+            )
+            logger.info(f"Healed {target_monster.title} for {self.heal_amount} HP.")
+        else:
+            logger.info(f"Condition for HealEffect not met. No heal applied.")
 
 @EffectRegistry.register("SET_IMMUNE")
 class SetImmuneEffect(Effect):
@@ -110,7 +130,11 @@ class SetImmuneEffect(Effect):
         super().__init__(**kwargs)
 
     def execute(
-        self, game_state: "GameState", source_player: "PlayerUnit", target_player: "PlayerUnit"
+        self,
+        game_state: "GameState",
+        source_player: "PlayerUnit",
+        target_player: "PlayerUnit",
+        attack_dealt_damage: bool | None = None,
     ) -> None:
         target_monster = None
         if self.target == "SELF":

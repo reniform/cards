@@ -69,14 +69,21 @@ class Attack:
                 f"Applying resistance on attack against {target.active_monster}."
             )
 
-        target.active_monster.take_damage(final_damage)
+        # If damage is 0 or less, it's not successful in that regard.
+        damage_was_dealt = False
+        if final_damage > 0:
+            damage_was_dealt = target.active_monster.take_damage(final_damage)
+
         logger.info(f"{self.title} dealt {final_damage} damage! {data_str}")
 
         # 2. Execute effects
         if self.effects:
             for effect in self.effects:
                 effect.execute(
-                    game_state=game_state, source_player=attacker, target_player=target
+                    game_state=game_state,
+                    source_player=attacker,
+                    target_player=target,
+                    attack_dealt_damage=damage_was_dealt,
                 )
 
         # 3. Mark attacker flag
